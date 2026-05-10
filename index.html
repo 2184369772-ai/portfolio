@@ -344,6 +344,7 @@
 
       <!-- Desktop links -->
       <div class="hidden md:flex items-center gap-8">
+        <a href="#philosophy" class="nav-link text-sm font-medium tracking-wide">理念</a>
         <a href="#products" class="nav-link text-sm font-medium tracking-wide">产品</a>
         <a href="#app" class="nav-link text-sm font-medium tracking-wide">应用</a>
         <a href="#projects" class="nav-link text-sm font-medium tracking-wide">项目</a>
@@ -364,6 +365,7 @@
 
   <!-- Mobile Menu -->
   <div class="mobile-menu" id="mobileMenu" onclick="toggleMenu()">
+    <a href="#philosophy" class="text-2xl font-semibold text-text-primary hover:text-accent-glow transition-colors">理念</a>
     <a href="#products" class="text-2xl font-semibold text-text-primary hover:text-accent-glow transition-colors">产品</a>
     <a href="#app" class="text-2xl font-semibold text-text-primary hover:text-accent-glow transition-colors">应用</a>
     <a href="#projects" class="text-2xl font-semibold text-text-primary hover:text-accent-glow transition-colors">项目</a>
@@ -412,6 +414,104 @@
 
     <!-- Bottom fade -->
     <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-bg-primary to-transparent"></div>
+  </section>
+
+
+  <!-- ============ PRODUCT PHILOSOPHY ============ -->
+  <section class="py-28 relative overflow-hidden" id="philosophy">
+    <div class="glow-orb w-[500px] h-[500px] bg-accent-primary/8 top-0 left-[-150px]" style="position:absolute;"></div>
+    <div class="glow-orb w-[400px] h-[400px] bg-accent-cyan/6 bottom-0 right-[-100px]" style="position:absolute;"></div>
+
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-8 relative z-10">
+
+      <!-- Section header -->
+      <div class="mb-16 reveal-up text-center max-w-2xl mx-auto">
+        <span class="tag text-xs tracking-widest uppercase mb-4 inline-block">Philosophy</span>
+        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mt-3 mb-6">产品理念</h2>
+        <p class="text-text-secondary text-base leading-relaxed">
+          一款跟着音乐节奏手指敲打的实体感应设备——不是音游应用，而是你可以贴在身上的节奏伴侣。
+        </p>
+      </div>
+
+      <!-- Core concept cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+
+        <!-- Card 1: What it is -->
+        <div class="product-card reveal-up p-8 flex flex-col">
+          <div class="w-12 h-12 rounded-2xl bg-accent-primary/15 border border-accent-primary/20 flex items-center justify-center mb-5">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">实体硬件，不是 App</h3>
+          <p class="text-sm text-text-secondary leading-relaxed flex-1">
+            像纸片一样薄、可弯曲的柔性设备。随手贴在裤腿或口袋旁，既是节奏控制器，也是一件简约时尚装饰物。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border/50">
+            <span class="tag text-xs !text-accent-primary/80">超薄柔性</span>
+            <span class="tag text-xs !text-accent-primary/80">可穿戴</span>
+            <span class="tag text-xs !text-accent-primary/80">时尚配件</span>
+          </div>
+        </div>
+
+        <!-- Card 2: How it works -->
+        <div class="product-card reveal-up p-8 flex flex-col">
+          <div class="w-12 h-12 rounded-2xl bg-accent-cyan/15 border border-accent-cyan/20 flex items-center justify-center mb-5">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">闭眼也能玩</h3>
+          <p class="text-sm text-text-secondary leading-relaxed flex-1">
+            不需要盯着屏幕看音符下落。戴上耳机，打开手机 App 连上设备，手指跟着鼓点敲打——完全靠触感和听觉。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border/50">
+            <span class="tag text-xs !text-accent-cyan/80">无需注视</span>
+            <span class="tag text-xs !text-accent-cyan/80">触感反馈</span>
+            <span class="tag text-xs !text-accent-cyan/80">BLE 连接</span>
+          </div>
+        </div>
+
+        <!-- Card 3: Play modes -->
+        <div class="product-card reveal-up p-8 flex flex-col md:col-span-2 lg:col-span-1">
+          <div class="w-12 h-12 rounded-2xl bg-accent-green/15 border border-accent-green/20 flex items-center justify-center mb-5">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round"><path d="M14.5 4h-5L7 10H4l3 7h3l2.5 6h5l-2.5-6h3L17 10h-3z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">两种玩法，放松至上</h3>
+          <p class="text-sm text-text-secondary leading-relaxed flex-1">
+            <strong class="text-text-primary">手指点击模式：</strong>跟随鼓点轻敲，像玩音游一样但不用看。<br><br>
+            <strong class="text-text-primary">动作感应模式：</strong>检测你的动作幅度，引导你跟着节奏轻跳或摆动，内置简单舞蹈教学。
+          </p>
+          <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border/50">
+            <span class="tag text-xs !text-accent-green/80">手指敲击</span>
+            <span class="tag text-xs !text-accent-green/80">体感踩点</span>
+            <span class="tag text-xs !text-accent-green/80">舞蹈引导</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Origin story banner -->
+      <div class="reveal-up relative rounded-3xl overflow-hidden border border-border/60" style="background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(6,182,212,0.05) 50%, rgba(26,26,37,0.6) 100%);">
+        <!-- Inner glow -->
+        <div class="absolute top-0 left-1/4 w-64 h-64 bg-accent-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="absolute bottom-0 right-1/4 w-48 h-48 bg-accent-cyan/8 rounded-full blur-[80px] pointer-events-none"></div>
+
+        <div class="relative z-10 p-8 sm:p-10 lg:p-12">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="w-10 h-10 rounded-xl bg-accent-orange/15 border border-accent-orange/25 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-semibold mb-1">创意从哪里来？</h3>
+              <p class="text-sm text-accent-orange font-medium">Origin Story</p>
+            </div>
+          </div>
+          <p class="text-text-secondary leading-relaxed text-base max-w-2xl pl-14">
+            走在路上戴着耳机，听到一首节奏感很强的歌——身体会不由自主想跟着动起来。<br><br>
+            但在公共场合，在等车排队的间隙，你没办法大幅地跳舞或跺脚。<br><br>
+            所以你想：如果能让<strong class="text-text-primary">手指</strong>来代替呢？轻轻敲打，悄悄释放那份被音乐点燃的能量——这就是 Ideal Beat 的起点。
+          </p>
+        </div>
+      </div>
+
+    </div>
   </section>
 
 
