@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>理想节拍 — 产品展示</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  
+  <!-- Lenis Smooth Scroll -->
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: { primary: '#0a0a0f', secondary: '#111118', card: '#1a1a25', elevated: '#222230' },
+            text: { primary: '#f0f0f5', secondary: '#8888a0', muted: '#55556a' },
+            accent: { primary: '#6366f1', glow: '#818cf8', green: '#10b981', orange: '#f59e0b', cyan: '#06b6d4' },
+            border: { DEFAULT: 'rgba(255,255,255,0.08)', hover: 'rgba(255,255,255,0.15)' }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans SC', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: auto; /* Lenis handles this */ }
+    
+    body {
+      font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+      background-color: #0a0a0f;
+      color: #f0f0f5;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== NAVIGATION ===== */
+    .nav-glass {
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      background: rgba(10, 10, 15, 0.7);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .nav-transparent {
+      background: transparent;
+      border-bottom: none;
+    }
+    .nav-link {
+      position: relative;
+      color: #8888a0;
+      transition: color 0.3s ease;
+    }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: 50%;
+      width: 0; height: 2px;
+      background: linear-gradient(90deg, #6366f1, #818cf8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translateX(-50%);
+      border-radius: 2px;
+    }
+    .nav-link:hover { color: #f0f0f5; }
+    .nav-link:hover::after { width: 100%; }
+
+    /* ===== HERO ===== */
+    .hero-gradient {
+      background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(99, 102, 241, 0.12) 0%, transparent 70%),
+                  radial-gradient(ellipse 60% 50% at 80% 20%, rgba(129, 140, 248, 0.08) 0%, transparent 60%),
+                  #0a0a0f;
+    }
+    .hero-grid {
+      background-image: 
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 70% 70% at 50% 30%, black 20%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 30%, black 20%, transparent 70%);
+    }
+
+    /* ===== SECTION REVEAL ===== */
+    .reveal-up { opacity: 0; transform: translateY(40px); }
+    .reveal-scale { opacity: 0; transform: scale(0.95); }
+
+    /* ===== CARD STYLES ===== */
+    .product-card {
+      background: linear-gradient(145deg, rgba(26,26,37,0.8), rgba(26,26,37,0.4));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    .product-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      border-radius: 20px;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent 50%, rgba(99,102,241,0.1));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .product-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(255,255,255,0.12);
+      box-shadow: 0 20px 60px -15px rgba(99, 102, 241, 0.15), 
+                  0 8px 24px -8px rgba(0,0,0,0.5);
+    }
+    .product-card:hover::before { opacity: 1; }
+
+    /* Highlight cards */
+    .stat-card {
+      background: linear-gradient(145deg, rgba(26,26,37,0.6), rgba(17,17,24,0.8));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 32px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::after {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent);
+    }
+
+    /* ===== IPHONE MOCKUP ===== */
+    .iphone-frame {
+      width: 280px;
+      height: 572px;
+      background: #1a1a25;
+      border-radius: 44px;
+      border: 3px solid #333340;
+      padding: 12px;
+      position: relative;
+      flex-shrink: 0;
+      box-shadow: 
+        0 0 0 1px rgba(255,255,255,0.05),
+        0 40px 100px -20px rgba(99, 102, 241, 0.25),
+        0 20px 60px -15px rgba(0,0,0,0.7);
+    }
+    .iphone-screen {
+      width: 100%; height: 100%;
+      border-radius: 32px;
+      overflow: hidden;
+      position: relative;
+      background: #000;
+    }
+    .iphone-screen img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .iphone-notch {
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 120px; height: 28px;
+      background: #1a1a25;
+      border-radius: 0 0 20px 20px;
+      z-index: 5;
+    }
+    .iphone-home-indicator {
+      position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+      width: 120px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px;
+      z-index: 5;
+    }
+
+    /* App feature items */
+    .feature-item {
+      opacity: 0.35;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translateX(-12px);
+    }
+    .feature-item.active {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #5558e6);
+      color: white;
+      padding: 14px 32px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, #818cf8, #6366f1);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px -8px rgba(99, 102, 241, 0.5);
+    }
+    .btn-primary:hover::before { opacity: 1; }
+    .btn-primary span { position: relative; z-index: 1; }
+
+    .btn-outline {
+      background: transparent;
+      color: #f0f0f5;
+      padding: 14px 32px;
+      border-radius: 12px;
+      font-weight: 500;
+      font-size: 15px;
+      border: 1px solid rgba(255,255,255,0.15);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .btn-outline:hover {
+      border-color: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.04);
+      transform: translateY(-2px);
+    }
+
+    /* ===== TAG / BADGE ===== */
+    .tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      color: #8888a0;
+      transition: all 0.3s ease;
+    }
+    .tag:hover { border-color: rgba(99,102,241,0.3); color: #c0c0d0; }
+
+    /* ===== TIMELINE ===== */
+    .timeline-line {
+      position: absolute; left: 19px; top: 48px; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, #6366f1, rgba(99,102,241,0.1));
+    }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a0f; }
+    ::-webkit-scrollbar-thumb { background: #333340; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #444455; }
+
+    /* ===== GRADIENT TEXT ===== */
+    .gradient-text {
+      background: linear-gradient(135deg, #f0f0f5 0%, #8888a0 50%, #6366f1 100%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    /* ===== GLOW EFFECTS ===== */
+    .glow-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Placeholder product image */
+    .product-placeholder {
+      background: linear-gradient(145deg, #1a1a25, #111118);
+      display: flex; align-items: center; justify-content: center;
+      min-height: 300px;
+      position: relative;
+      overflow: hidden;
+    }
+    .product-placeholder-inner {
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      color: #55556a;
+    }
+
+    /* Section divider */
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+      margin: 0 auto;
+      max-width: 800px;
+    }
+
+    /* Mobile nav */
+    .mobile-menu {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(10, 10, 15, 0.95);
+      backdrop-filter: blur(20px);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 32px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+    .mobile-menu.open { opacity: 1; pointer-events: auto; }
+    .hamburger { cursor: pointer; z-index: 101; }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .iphone-frame {
+        width: 240px; height: 492px;
+        border-radius: 38px;
+      }
+      .iphone-screen { border-radius: 28px; }
+      .iphone-notch { width: 100px; height: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ NAVIGATION ============ -->
+  <nav id="navbar" class="fixed top-0 left-0 w-full z-50 nav-transparent transition-all duration-500">
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-2.5 group">
+        <div class="w-8 h-8 rounded-lg bg-accent-primary/20 border border-accent-primary/30 flex items-center justify-center group-hover:bg-accent-primary/30 transition-all duration-300">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        </div>
+        <span class="font-semibold text-text-primary text-base tracking-tight">理想节拍</span>
+      </a>
+
+      <!-- Desktop links -->
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#products" class="nav-link text-sm font-medium tracking-wide">产品</a>
+        <a href="#app" class="nav-link text-sm font-medium tracking-wide">应用</a>
+        <a href="#projects" class="nav-link text-sm font-medium tracking-wide">项目</a>
+        <a href="#about" class="nav-link text-sm font-medium tracking-wide">关于</a>
+        <a href="#contact" class="btn-primary text-sm py-2.5 px-5"><span>联系我</span></a>
+      </div>
+
+      <!-- Hamburger (mobile) -->
+      <div class="hamburger md:hidden" id="hamburger" onclick="toggleMenu()">
+        <svg id="ham-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu" onclick="toggleMenu()">
+    <a href="#products" class="text-2xl font-semibold text-text-primary hover:text-accent-glow transition-colors">产品</a>
+    <a href="#app" class="text-2xl font-semibold text-text-primary hover:text-accent-glow transition-colors">应用</a>
+    <a href="#projects" class="text-2xl font-semibold text-text-primary hover:text-accent-glow transition-colors">项目</a>
+    <a href="#about" class="text-2xl font-semibold text-text-primary hover:text-accent-glow transition-colors">关于</a>
+    <a href="#contact" class="text-2xl font-semibold text-text-accent-glow">联系我</a>
+  </div>
+
+
+  <!-- ============ HERO ============ -->
+  <section class="relative min-h-screen flex items-center hero-gradient overflow-hidden">
+    <!-- Background grid -->
+    <div class="absolute inset-0 hero-grid pointer-events-none"></div>
+    
+    <!-- Glow orbs -->
+    <div class="glow-orb w-[600px] h-[600px] bg-accent-primary/10 top-[-200px] right-[-200px]" style="position:absolute;"></div>
+    <div class="glow-orb w-[400px] h-[400px] bg-accent-cyan/8 bottom-[-100px] left-[-100px]" style="position:absolute;"></div>
+
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-8 pt-32 pb-24 relative z-10 w-full">
+      <div class="max-w-3xl">
+        <!-- Eyebrow -->
+        <div id="hero-eyebrow" class="reveal-up mb-6">
+          <span class="tag text-xs tracking-wider uppercase">
+            <span class="w-1.5 h-1.5 rounded-full bg-accent-green animate-pulse"></span>
+            硬件 × 软件 × 音乐
+          </span>
+        </div>
+
+        <!-- Main heading -->
+        <h1 id="hero-title" class="reveal-up text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[1.05] tracking-tight mb-6">
+          用压感<br class="sm:hidden">
+          <span class="gradient-text">重塑节奏训练</span>
+        </h1>
+
+        <!-- Subtitle -->
+        <p id="hero-sub" class="reveal-up text-lg sm:text-xl text-text-secondary leading-relaxed max-w-xl mb-10">
+          从硬件传感器到移动端应用，打造完整的无压力音乐节拍感应训练系统。
+        </p>
+
+        <!-- CTA -->
+        <div id="hero-cta" class="reveal-up flex flex-wrap gap-4">
+          <a href="#app" class="btn-primary"><span>查看产品 →</span></a>
+          <a href="#contact" class="btn-outline">取得联系</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom fade -->
+    <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-bg-primary to-transparent"></div>
+  </section>
+
+
+  <!-- ============ HIGHLIGHTS ============ -->
+  <section class="py-28 relative" id="highlights">
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-8">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 max-w-4xl mx-auto">
+        
+        <div class="stat-card reveal-up">
+          <div class="text-4xl lg:text-5xl font-bold font-mono text-accent-glow mb-2">
+            <span class="countup" data-target="3">0</span><span class="text-2xl text-accent-primary ml-0.5">+</span>
+          </div>
+          <div class="text-sm text-text-secondary font-medium">核心产品线</div>
+        </div>
+
+        <div class="stat-card reveal-up">
+          <div class="text-4xl lg:text-5xl font-bold font-mono text-accent-cyan mb-2">
+            <span class="countup" data-target="4">0</span><span class="text-2xl text-accent-cyan/60 ml-0.5">ms</span>
+          </div>
+          <div class="text-sm text-text-secondary font-medium">感应响应延迟</div>
+        </div>
+
+        <div class="stat-card reveal-up">
+          <div class="text-4xl lg:text-5xl font-bold font-mono text-accent-green mb-2">
+            BLE<span class="countup" data-target="5.0" data-decimal="true">0</span>
+          </div>
+          <div class="text-sm text-text-secondary font-medium">低功耗无线协议</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============ PHYSICAL PRODUCTS ============ -->
+  <section class="py-28 relative" id="products">
+    <div class="glow-orb w-[500px] h-[500px] bg-accent-primary/6 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style="position:absolute;"></div>
+    
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-8 relative z-10">
+      <!-- Section header -->
+      <div class="mb-16 reveal-up">
+        <span class="tag text-xs tracking-widest uppercase mb-4 inline-block">Hardware</span>
+        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mt-3">实体产品</h2>
+        <p class="text-text-secondary mt-4 max-w-lg text-base leading-relaxed">
+          自研硬件，从原理图到 PCB，每一步都亲手打磨。
+        </p>
+      </div>
+
+      <!-- Product cards (placeholder) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- Product 1 placeholder -->
+        <div class="product-card reveal-up">
+          <div class="product-placeholder aspect-[4/3]">
+            <div class="product-placeholder-inner">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" class="opacity-30">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
+              </svg>
+              <span class="text-sm font-medium">图片待补充</span>
+            </div>
+          </div>
+          <div class="p-6">
+            <h3 class="text-lg font-semibold mb-1.5">Ideal Beat 控制器</h3>
+            <p class="text-sm text-text-secondary leading-relaxed mb-4">双 FSR 压感传感器 + nRF52840 核心板，BLE 无线连接。</p>
+            <div class="flex flex-wrap gap-2">
+              <span class="tag text-xs">FSR 传感器</span>
+              <span class="tag text-xs">nRF52840</span>
+              <span class="tag text-xs">BLE 5.0</span>
+              <span class="tag text-xs">USB-C</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product 2 placeholder -->
+        <div class="product-card reveal-up">
+          <div class="product-placeholder aspect-[4/3]">
+            <div class="product-placeholder-inner">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" class="opacity-30">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
+              </svg>
+              <span class="text-sm font-medium">图片待补充</span>
+            </div>
+          </div>
+          <div class="p-6">
+            <h3 class="text-lg font-semibold mb-1.5">定制 PCB</h3>
+            <p class="text-sm text-text-secondary leading-relaxed mb-4">KiCad 自主设计，40×95mm 紧凑尺寸，深度休眠超低功耗。</p>
+            <div class="flex flex-wrap gap-2">
+              <span class="tag text-xs">KiCad</span>
+              <span class="tag text-xs">40×95mm</span>
+              <span class="tag text-xs">低功耗设计</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product 3 placeholder -->
+        <div class="product-card reveal-up">
+          <div class="product-placeholder aspect-[4/3]">
+            <div class="product-placeholder-inner">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" class="opacity-30">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>
+              </svg>
+              <span class="text-sm font-medium">图片待补充</span>
+            </div>
+          </div>
+          <div class="p-6">
+            <h3 class="text-lg font-semibold mb-1.5">外壳与封装</h3>
+            <p class="text-sm text-text-secondary leading-relaxed mb-4">3D 打印外壳 + 一体化封装方案，兼顾手感与防护。</p>
+            <div class="flex flex-wrap gap-2">
+              <span class="tag text-xs">3D 打印</span>
+              <span class="tag text-xs">一体化设计</span>
+              <span class="tag text-xs">便携</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Divider -->
+  <div class="section-divider"></div>
+
+
+  <!-- ============ APP PRODUCT ============ -->
+  <section class="py-28 relative overflow-hidden" id="app">
+    <div class="glow-orb w-[600px] h-[600px] bg-accent-primary/8 top-0 right-[-200px]" style="position:absolute;"></div>
+    <div class="glow-orb w-[400px] h-[400px] bg-accent-green/6 bottom-0 left-[-100px]" style="position:absolute;"></div>
+
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-8 relative z-10">
+      
+      <!-- Section header -->
+      <div class="mb-20 reveal-up text-center">
+        <span class="tag text-xs tracking-widest uppercase mb-4 inline-block">Mobile App</span>
+        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mt-3">Ideal Beat</h2>
+        <p class="text-text-secondary mt-4 max-w-md mx-auto text-base leading-relaxed">
+          无压力音乐节拍感应训练。连接设备，选一首歌，开始踩点。
+        </p>
+      </div>
+
+      <!-- App showcase: iPhone Mockup + Features -->
+      <div class="flex flex-col lg:flex-row items-center justify-center gap-16 lg:gap-24">
+        
+        <!-- iPhone Mockup (pinned on scroll) -->
+        <div class="mockup-container flex-shrink-0 reveal-scale" id="appMockup">
+          <div class="iphone-frame">
+            <div class="iphone-notch"></div>
+            <div class="iphone-screen" id="iphoneScreen">
+              <img src="" alt="App Screenshot" id="screenImg" class="hidden">
+              <!-- Screens will be shown via JS scroll-driven switching -->
+              <img src="assets/01_连接扫描页_Connection.jpg" alt="Connection" class="app-screen-img absolute inset-0 w-full h-full object-cover" data-screen="0">
+              <img src="assets/02_已连接选歌页_Connected.jpg" alt="Connected" class="app-screen-img absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500" data-screen="1">
+              <img src="assets/03_训练页_Training.jpg" alt="Training" class="app-screen-img absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500" data-screen="2">
+              <img src="assets/04_结果页_Result.jpg" alt="Result" class="app-screen-img absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500" data-screen="3">
+            </div>
+            <div class="iphone-home-indicator"></div>
+          </div>
+        </div>
+
+        <!-- Feature list (scroll-synced) -->
+        <div class="flex flex-col gap-8 max-w-sm" id="featureList">
+          
+          <div class="feature-item active" data-feature="0">
+            <div class="flex items-start gap-4">
+              <div class="w-11 h-11 rounded-xl bg-accent-primary/15 border border-accent-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round"><path d="m5 12 7-7 7 7M5 19l7-7 7 7"/></svg>
+              </div>
+              <div>
+                <h3 class="text-base font-semibold mb-1">一键连接</h3>
+                <p class="text-sm text-text-secondary leading-relaxed">自动扫描 BLE 设备，支持直连模式，无需反复配对。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="feature-item" data-feature="1">
+            <div class="flex items-start gap-4">
+              <div class="w-11 h-11 rounded-xl bg-accent-cyan/15 border border-accent-cyan/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </div>
+              <div>
+                <h3 class="text-base font-semibold mb-1">随心选歌</h3>
+                <p class="text-sm text-text-secondary leading-relaxed">本地曲库浏览，显示 BPM 信息，找到最适合训练的节奏。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="feature-item" data-feature="2">
+            <div class="flex items-start gap-4">
+              <div class="w-11 h-11 rounded-xl bg-accent-orange/15 border border-accent-orange/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              </div>
+              <div>
+                <h3 class="text-base font-semibold mb-1">实时感应</h3>
+                <p class="text-sm text-text-secondary leading-relaxed">FSR 压感数据实时采集，可视化波形反馈，精准捕捉每次踩踏。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="feature-item" data-feature="3">
+            <div class="flex items-start gap-4">
+              <div class="w-11 h-11 rounded-xl bg-accent-green/15 border border-accent-green/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+              </div>
+              <div>
+                <h3 class="text-base font-semibold mb-1">成绩分析</h3>
+                <p class="text-sm text-text-secondary leading-relaxed">训练结束后即时出分，统计总拍数、时长、BPM 匹配度。</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- Divider -->
+  <div class="section-divider"></div>
+
+
+  <!-- ============ PROJECT EXPERIENCE ============ -->
+  <section class="py-28 relative" id="projects">
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-8">
+      
+      <div class="mb-16 reveal-up">
+        <span class="tag text-xs tracking-widest uppercase mb-4 inline-block">Experience</span>
+        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mt-3">项目经验</h2>
+      </div>
+
+      <div class="max-w-2xl">
+        
+        <!-- Project item 1 -->
+        <div class="reveal-up pl-14 pb-12 relative group">
+          <div class="timeline-line"></div>
+          <div class="absolute left-0 top-1 w-10 h-10 rounded-full bg-bg-card border-2 border-accent-primary/40 flex items-center justify-center z-10 group-hover:border-accent-primary transition-colors">
+            <div class="w-2.5 h-2.5 rounded-full bg-accent-primary"></div>
+          </div>
+          <div class="bg-bg-card/50 border border-border rounded-2xl p-6 hover:border-border-hover transition-all duration-300">
+            <div class="flex flex-wrap items-center gap-3 mb-3">
+              <h3 class="text-lg font-semibold">Ideal Beat 节拍训练系统</h3>
+              <span class="tag text-xs !py-0.5 !px-2.5">进行中</span>
+            </div>
+            <p class="text-sm text-text-secondary leading-relaxed mb-4">端到端硬件 + 软件：nRF52840 双 FSR 压感控制器 + Flutter 移动端 App。BLE 通信协议自主设计，涵盖深睡唤醒、断连重连等完整电源管理策略。</p>
+            <div class="flex flex-wrap gap-2">
+              <span class="tag text-xs !text-accent-cyan !border-accent-cyan/20">Flutter</span>
+              <span class="tag text-xs !text-accent-primary !border-accent-primary/20">nRF52840</span>
+              <span class="tag text-xs !text-accent-green !border-accent-green/20">BLE</span>
+              <span class="tag text-xs !text-accent-orange !border-accent-orange/20">KiCad</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project item 2 -->
+        <div class="reveal-up pl-14 pb-12 relative group">
+          <div class="absolute left-0 top-1 w-10 h-10 rounded-full bg-bg-card border-2 border-accent-cyan/40 flex items-center justify-center z-10 group-hover:border-accent-cyan transition-colors">
+            <div class="w-2.5 h-2.5 rounded-full bg-accent-cyan"></div>
+          </div>
+          <div class="bg-bg-card/50 border border-border rounded-2xl p-6 hover:border-border-hover transition-all duration-300">
+            <div class="flex flex-wrap items-center gap-3 mb-3">
+              <h3 class="text-lg font-semibold">MyAPI 智能问答平台</h3>
+              <span class="tag text-xs !py-0.5 !px-2.5">已上线</span>
+            </div>
+            <p class="text-sm text-text-secondary leading-relaxed mb-4">基于 FastAPI + 通义千问 API 的智能对话服务，支持流式输出与多轮上下文管理。部署于 Zeabur 云平台。</p>
+            <div class="flex flex-wrap gap-2">
+              <span class="tag text-xs !text-accent-cyan !border-accent-cyan/20">FastAPI</span>
+              <span class="tag text-xs !text-accent-green !border-accent-green/20">Python</span>
+              <span class="tag text-xs !text-accent-orange !border-accent-orange/20">通义千问</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project item 3 -->
+        <div class="reveal-up pl-14 pb-0 relative group">
+          <div class="absolute left-0 top-1 w-10 h-10 rounded-full bg-bg-card border-2 border-accent-green/40 flex items-center justify-center z-10 group-hover:border-accent-green transition-colors">
+            <div class="w-2.5 h-2.5 rounded-full bg-accent-green"></div>
+          </div>
+          <div class="bg-bg-card/50 border border-border rounded-2xl p-6 hover:border-border-hover transition-all duration-300">
+            <div class="flex flex-wrap items-center gap-3 mb-3">
+              <h3 class="text-lg font-semibold">Web 前端实训项目集</h3>
+              <span class="tab text-xs !py-0.5 !px-2.5">课程</span>
+            </div>
+            <p class="text-sm text-text-secondary leading-relaxed mb-4">电商商品展示页、移动端商品列表页等前端页面开发实践，掌握 HTML/CSS/JavaScript 核心技能与响应式布局。</p>
+            <div class="flex flex-wrap gap-2">
+              <span class="tag text-xs !text-accent-orange !border-accent-orange/20">HTML/CSS</span>
+              <span class="tag text-xs !text-accent-primary !border-accent-primary/20">JavaScript</span>
+              <span class="tag text-xs !text-text-secondary !border-border">响应式</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Divider -->
+  <div class="section-divider"></div>
+
+
+  <!-- ============ ABOUT ME ============ -->
+  <section class="py-28 relative" id="about">
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-8">
+      <div class="flex flex-col lg:flex-row items-start gap-16">
+        
+        <!-- Left: About text -->
+        <div class="flex-1 reveal-up">
+          <span class="tag text-xs tracking-widest uppercase mb-4 inline-block">About</span>
+          <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mt-3 mb-6">关于我</h2>
+          <p class="text-text-secondary leading-relaxed mb-6 max-w-lg">
+            全栈探索者。从嵌入式电路到 Flutter 应用，从 PCB 打板到云端部署——喜欢把东西从零做到一。
+          </p>
+          <p class="text-text-secondary leading-relaxed mb-8 max-w-lg">
+            目前专注于 IoT + 移动端的交叉领域，相信好的工具应该让人感觉不到技术的存在。
+          </p>
+
+          <!-- Skills tags -->
+          <div class="space-y-4">
+            <div>
+              <div class="text-xs text-text-muted uppercase tracking-wider mb-2.5 font-medium">技术栈</div>
+              <div class="flex flex-wrap gap-2">
+                <span class="tag">Flutter / Dart</span>
+                <span class="tag">Python</span>
+                <span class="tag">FastAPI</span>
+                <span class="tag">HTML / CSS</span>
+                <span class="tag">JavaScript</span>
+                <span class="tag">C / C++</span>
+                <span class="tag">MATLAB</span>
+              </div>
+            </div>
+            <div>
+              <div class="text-xs text-text-muted uppercase tracking-wider mb-2.5 font-medium">工具 & 平台</div>
+              <div class="flex flex-wrap gap-2">
+                <span class="tag">KiCad</span>
+                <span class="tag">Android Studio</span>
+                <span class="tag">Git</span>
+                <span class="tag">Zeabur</span>
+                <span class="tag">通义千问 API</span>
+                <span class="tag">BLE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Visual element (decorative) -->
+        <div class="hidden lg:block w-[320px] flex-shrink-0 reveal-scale">
+          <div class="aspect-square rounded-3xl bg-gradient-to-br from-bg-card to-bg-secondary border border-border p-8 relative overflow-hidden">
+            <!-- Decorative inner elements -->
+            <div class="absolute top-6 right-6 w-20 h-20 rounded-2xl bg-accent-primary/10 border border-accent-primary/15 flex items-center justify-center">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            </div>
+            <div class="absolute bottom-10 left-6 w-16 h-16 rounded-xl bg-accent-green/10 border border-accent-green/15 flex items-center justify-center">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full bg-accent-cyan/8 border border-accent-cyan/12 flex items-center justify-center">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            </div>
+            <!-- Grid pattern overlay -->
+            <div class="absolute inset-0 opacity-[0.03]" style="background-image:radial-gradient(circle, #fff 1px, transparent 1px);background-size:16px 16px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============ CONTACT / FOOTER ============ -->
+  <footer class="py-28 relative border-t border-border" id="contact">
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-8">
+      
+      <div class="max-w-2xl mx-auto text-center reveal-up">
+        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mb-4">保持联络</h2>
+        <p class="text-text-secondary mb-10 text-base">有想法要聊？欢迎随时找我。</p>
+
+        <!-- Contact links -->
+        <div class="flex justify-center gap-4 flex-wrap mb-16">
+          <a href="mailto:2184369772@qq.com" class="group flex items-center gap-2.5 px-5 py-3 rounded-xl bg-bg-card border border-border hover:border-accent-primary/30 hover:bg-bg-elevated transition-all duration-300">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8888a0" stroke-width="2" stroke-linecap="round" class="group-hover:stroke-accent-glow transition-colors"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <span class="text-sm text-text-secondary group-hover:text-text-primary transition-colors">Email</span>
+          </a>
+          <a href="#" class="group flex items-center gap-2.5 px-5 py-3 rounded-xl bg-bg-card border border-border hover:border-accent-primary/30 hover:bg-bg-elevated transition-all duration-300">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8888a0" stroke-width="2" stroke-linecap="round" class="group-hover:stroke-accent-glow transition-colors"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+            <span class="text-sm text-text-secondary group-hover:text-text-primary transition-colors">GitHub</span>
+          </a>
+          <a href="#" class="group flex items-center gap-2.5 px-5 py-3 rounded-xl bg-bg-card border border-border hover:border-accent-primary/30 hover:bg-bg-elevated transition-all duration-300">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8888a0" stroke-width="2" stroke-linecap="round" class="group-hover:stroke-accent-glow transition-colors"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            <span class="text-sm text-text-secondary group-hover:text-text-primary transition-colors">微信</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Footer bottom -->
+      <div class="pt-8 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <span class="text-xs text-text-muted">© 2026 理想节拍 · All rights reserved.</span>
+        <span class="text-xs text-text-muted">Built with precision & passion</span>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ======================== JAVASCRIPT ======================== -->
+  <script>
+    // ===== LENIS SMOOTH SCROLL =====
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+    });
+
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    // Connect Lenis to GSAP ScrollTrigger
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add((time) => { lenis.raf(time * 1000); });
+    gsap.ticker.lagSmoothing(0);
+
+
+    // ===== NAVBAR SCROLL BEHAVIOR =====
+    const navbar = document.getElementById('navbar');
+    let lastScrollY = 0;
+
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      if (scrollY > 80) {
+        navbar.classList.remove('nav-transparent');
+        navbar.classList.add('nav-glass');
+      } else {
+        navbar.classList.add('nav-transparent');
+        navbar.classList.remove('nav-glass');
+      }
+      lastScrollY = scrollY;
+    }, { passive: true });
+
+
+    // ===== MOBILE MENU =====
+    function toggleMenu() {
+      const menu = document.getElementById('mobileMenu');
+      menu.classList.toggle('open');
+      // Toggle body scroll when mobile menu open
+      document.body.style.overflow = menu.classList.contains('open') ? 'hidden' : '';
+    }
+    // Close mobile menu on link click
+    document.querySelectorAll('#mobileMenu a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('mobileMenu').classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    });
+
+
+    // ===== GSAP ANIMATIONS =====
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Hero stagger animation
+    gsap.to('#hero-eyebrow', {
+      opacity: 1, y: 0, duration: 0.8, ease: 'power3.out',
+      delay: 0.2
+    });
+    gsap.to('#hero-title', {
+      opacity: 1, y: 0, duration: 1, ease: 'power3.out',
+      delay: 0.4
+    });
+    gsap.to('#hero-sub', {
+      opacity: 1, y: 0, duration: 0.8, ease: 'power3.out',
+      delay: 0.6
+    });
+    gsap.to('#hero-cta', {
+      opacity: 1, y: 0, duration: 0.8, ease: 'power3.out',
+      delay: 0.8
+    });
+
+    // General reveal animations (staggered)
+    gsap.utils.toArray('.reveal-up').forEach(el => {
+      if (el.closest('#hero-eyebrow, #hero-title, #hero-sub, #hero-cta')) return;
+      gsap.to(el, {
+        scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none none' },
+        opacity: 1, y: 0, duration: 0.8, ease: 'power3.out'
+      });
+    });
+
+    gsap.utils.toArray('.reveal-scale').forEach(el => {
+      gsap.to(el, {
+        scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none none' },
+        opacity: 1, scale: 1, duration: 1, ease: 'power3.out'
+      });
+    });
+
+
+    // ===== COUNTUP ANIMATION =====
+    document.querySelectorAll('.countup').forEach(counter => {
+      const target = parseFloat(counter.dataset.target);
+      const isDecimal = counter.dataset.decimal === 'true';
+      
+      ScrollTrigger.create({
+        trigger: counter,
+        start: 'top 85%',
+        once: true,
+        onEnter: () => {
+          let obj = { val: 0 };
+          gsap.to(obj, {
+            val: target,
+            duration: 2,
+            ease: 'power2.out',
+            onUpdate: () => {
+              counter.textContent = isDecimal ? obj.val.toFixed(1) : Math.floor(obj.val);
+            }
+          });
+        }
+      });
+    });
+
+
+    // ===== APP SCREEN SWITCHING ON SCROLL =====
+    const screens = document.querySelectorAll('.app-screen-img');
+    const features = document.querySelectorAll('.feature-item');
+    const totalScreens = screens.length;
+
+    // Create a scroll-triggered timeline for screen switching
+    const appSection = document.getElementById('app');
+    
+    ScrollTrigger.create({
+      trigger: appSection,
+      start: 'top 30%',
+      end: 'bottom 30%',
+      scrub: true,
+      onUpdate: self => {
+        const progress = self.progress; // 0 ~ 1
+        const screenIndex = Math.min(Math.floor(progress * totalScreens), totalScreens - 1);
+        
+        // Update screen visibility
+        screens.forEach((scr, i) => {
+          scr.style.opacity = i === screenIndex ? '1' : '0';
+          scr.style.transform = i === screenIndex ? 'scale(1)' : 'scale(1.02)';
+        });
+        
+        // Update features highlight
+        features.forEach((feat, i) => {
+          feat.classList.toggle('active', i === screenIndex);
+        });
+      }
+    });
+
+
+    // ===== SMOOTH SCROLL FOR NAV LINKS =====
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+        if (targetId === '#') return;
+        const targetEl = document.querySelector(targetId);
+        if (targetEl) {
+          lenis.scrollTo(targetEl, { offset: -64, duration: 1.5 });
+        }
+      });
+    });
+
+  </script>
+</body>
+</html>
