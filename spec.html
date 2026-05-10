@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ideal Beat 产品样品方案 — 理想节拍</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lenis Smooth Scroll -->
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: { primary: '#0a0a0f', secondary: '#111118', card: '#1a1a25', elevated: '#222230' },
+            text: { primary: '#f0f0f5', secondary: '#8888a0', muted: '#55556a' },
+            accent: { primary: '#6366f1', glow: '#818cf8', green: '#10b981', orange: '#f59e0b', cyan: '#06b6d4' },
+            border: { DEFAULT: 'rgba(255,255,255,0.08)', hover: 'rgba(255,255,255,0.15)' }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans SC', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: auto; }
+
+    body {
+      font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+      background-color: #0a0a0f;
+      color: #f0f0f5;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.7;
+    }
+
+    /* ===== NAVIGATION ===== */
+    .nav-glass {
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      background: rgba(10, 10, 15, 0.8);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .nav-transparent {
+      background: transparent;
+      border-bottom: none;
+    }
+    .nav-link {
+      position: relative;
+      color: #8888a0;
+      transition: color 0.3s ease;
+    }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: 50%;
+      width: 0; height: 2px;
+      background: linear-gradient(90deg, #6366f1, #818cf8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translateX(-50%);
+      border-radius: 2px;
+    }
+    .nav-link:hover { color: #f0f0f5; }
+    .nav-link:hover::after { width: 100%; }
+
+    /* ===== REVEAL ===== */
+    .reveal-up { opacity: 0; transform: translateY(30px); }
+
+    /* ===== SPEC PAGE STYLES ===== */
+    .spec-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .spec-table th {
+      background: rgba(26,26,37,0.8);
+      color: #f59e0b;
+      text-align: left;
+      padding: 12px 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+    .spec-table td {
+      padding: 10px 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: transparent;
+      font-size: 14px;
+      color: #c0c0d0;
+    }
+    .spec-table tr:nth-child(even) td { background: rgba(26,26,37,0.3); }
+    .spec-table tr:hover td { background: rgba(99,102,241,0.05); }
+
+    .pin-table td:first-child {
+      font-family: 'JetBrains Mono', monospace;
+      color: #ff6b6b;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    /* Note boxes */
+    .note-box {
+      background: linear-gradient(135deg, rgba(26,26,37,0.6), rgba(17,17,24,0.8));
+      border-left: 3px solid;
+      border-radius: 0 12px 12px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .note-box.red { border-color: #ef4444; }
+    .note-box.blue { border-color: #06b6d4; }
+    .note-box.green { border-color: #10b981; }
+    .note-box.orange { border-color: #f59e0b; }
+    .note-box strong { font-weight: 600; }
+    .note-box.red strong { color: #ef4444; }
+    .note-box.blue strong { color: #06b6d4; }
+    .note-box.green strong { color: #10b981; }
+    .note-box.orange strong { color: #f59e0b; }
+
+    /* Layer diagram */
+    .layer-box {
+      background: linear-gradient(145deg, rgba(26,26,37,0.8), rgba(26,26,37,0.3));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 28px;
+      margin: 20px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13.5px;
+      line-height: 2.2;
+    }
+    .layer-label { color: #818cf8; }
+    .layer-thick { color: #f59e0b; }
+    .layer-total { color: #10b981; font-weight: bold; font-size: 15px; }
+
+    /* Code/pre block */
+    .code-block {
+      background: rgba(17,17,24,0.9);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 16px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 2;
+      overflow-x: auto;
+      color: #c9d1d9;
+    }
+    .code-block code {
+      background: none;
+      padding: 0;
+      color: inherit;
+      font-size: inherit;
+    }
+
+    /* Section box */
+    .section-box {
+      background: linear-gradient(145deg, rgba(26,26,37,0.5), rgba(17,17,24,0.6));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 24px;
+      margin: 16px 0;
+    }
+
+    /* Section title styling */
+    .section-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px; height: 32px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* Glow orb */
+    .glow-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Tag/badge for inline */
+    .tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 500;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      color: #8888a0;
+    }
+
+    /* Highlight text */
+    .hl { color: #f59e0b; font-weight: 600; }
+    .hl-green { color: #10b981; font-weight: 600; }
+    .hl-blue { color: #06b6d4; font-weight: 600; }
+    .hl-red { color: #ef4444; font-weight: 600; }
+
+    /* Lists */
+    ul, ol { padding-left: 20px; margin: 10px 0; }
+    li { margin: 5px 0; font-size: 14px; color: #c0c0d0; }
+    li::marker { color: #55556a; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a0f; }
+    ::-webkit-scrollbar-thumb { background: #333340; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #444455; }
+
+    /* Back button */
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #8888a0;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .back-btn:hover {
+      border-color: rgba(99,102,241,0.3);
+      color: #f0f0f5;
+      background: rgba(99,102,241,0.08);
+      transform: translateX(-2px);
+    }
+
+    /* Mobile nav */
+    .mobile-menu {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(10, 10, 15, 0.96);
+      backdrop-filter: blur(20px);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 28px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+    .mobile-menu.open { opacity: 1; pointer-events: auto; }
+    .hamburger { cursor: pointer; z-index: 101; }
+
+    @media (max-width: 768px) {
+      .spec-table { font-size: 12.5px; }
+      .spec-table th, .spec-table td { padding: 8px 10px; }
+      .layer-box { font-size: 11.5px; padding: 18px; }
+      .section-box { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ NAVIGATION ============ -->
+  <nav id="navbar" class="fixed top-0 left-0 w-full z-50 nav-glass transition-all duration-500">
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Logo (links back to main) -->
+      <a href="index.html" class="flex items-center gap-2.5 group">
+        <div class="w-8 h-8 rounded-lg bg-accent-primary/20 border border-accent-primary/30 flex items-center justify-center group-hover:bg-accent-primary/30 transition-all duration-300">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        </div>
+        <span class="font-semibold text-text-primary text-base tracking-tight">理想节拍</span>
+      </a>
+
+      <!-- Desktop links -->
+      <div class="hidden md:flex items-center gap-8">
+        <a href="index.html#philosophy" class="nav-link text-sm font-medium tracking-wide">理念</a>
+        <a href="index.html#products" class="nav-link text-sm font-medium tracking-wide">产品</a>
+        <a href="index.html#app" class="nav-link text-sm font-medium tracking-wide">应用</a>
+        <span class="text-sm font-semibold tracking-wide text-accent-glow">技术规格</span>
+        <a href="index.html#projects" class="nav-link text-sm font-medium tracking-wide">项目</a>
+        <a href="index.html#about" class="nav-link text-sm font-medium tracking-wide">关于</a>
+      </div>
+
+      <!-- Hamburger (mobile) -->
+      <div class="hamburger md:hidden" id="hamburger" onclick="toggleMenu()">
+        <svg id="ham-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu" onclick="toggleMenu()">
+    <a href="index.html" class="text-2xl font-semibold text-text-primary hover:text-accent-glow transition-colors">← 返回首页</a>
+    <a href="index.html#philosophy" class="text-2xl font-semibold text-text-primary hover:text-accent-glow transition-colors">理念</a>
+    <a href="index.html#products" class="text-2xl font-semibold text-text-primary hover:text-accent-glow transition-colors">产品</a>
+    <a href="index.html#app" class="text-2xl font-semibold text-text-primary hover:text-accent-glow transition-colors">应用</a>
+    <a href="#" class="text-2xl font-semibold text-accent-glow">技术规格</a>
+    <a href="index.html#projects" class="text-2xl font-semibold text-text-primary hover:text-accent-glow transition-colors">项目</a>
+    <a href="index.html#about" class="text-2xl font-semibold text-text-primary hover:text-accent-glow transition-colors">关于</a>
+  </div>
+
+
+  <!-- ============ PAGE HEADER ============ -->
+  <section class="relative pt-32 pb-16 overflow-hidden">
+    <div class="glow-orb w-[500px] h-[500px] bg-accent-orange/8 top-[-100px] right-[-150px]" style="position:absolute;"></div>
+    <div class="glow-orb w-[350px] h-[350px] bg-accent-primary/6 bottom-[-80px] left-[-80px]" style="position:absolute;"></div>
+
+    <div class="max-w-[960px] mx-auto px-6 lg:px-8 relative z-10">
+      <!-- Breadcrumb / back -->
+      <div class="reveal-up mb-8">
+        <a href="index.html" class="back-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
+          返回首页
+        </a>
+      </div>
+
+      <!-- Title -->
+      <div class="reveal-up">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="tag text-xs tracking-wider uppercase">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"><path d="M14.5 4h-5L7 10H4l3 7h3l2.5 6h5l-2.5-6h3L17 10h-3z"/></svg>
+            Product Spec
+          </span>
+          <span class="text-xs text-text-muted">v1.1 — 2026-04-20</span>
+        </div>
+        <h1 class="text-4xl sm:text-5xl font-bold tracking-tight mb-4">
+          Ideal Beat 产品样品方案
+        </h1>
+        <p class="text-text-secondary text-lg max-w-xl leading-relaxed">
+          从层叠结构到 BOM 清单，从原理图到制作流程——完整的硬件样品设计文档。
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============ SECTION 1: 产品结构 ============ -->
+  <section class="py-16 relative" id="structure">
+    <div class="glow-orb w-[400px] h-[400px] bg-accent-primary/5 top-1/2 left-[-120px]" style="position:absolute;"></div>
+
+    <div class="max-w-[960px] mx-auto px-6 lg:px-8 relative z-10">
+
+      <div class="flex items-center gap-4 mb-10 reveal-up">
+        <div class="section-num bg-accent-red/15 border border-accent-red/25 text-red-400">1</div>
+        <div>
+          <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">产品结构与厚度</h2>
+        </div>
+      </div>
+
+      <!-- Layer diagram -->
+      <div class="layer-box reveal-up">
+<div><span class="layer-label">顶层 PET 薄膜</span>          <span class="layer-thick">0.1mm</span>   ← 用户触摸面（医用亲肤双面胶固定）</div>
+<div><span class="layer-label">FSR406 ×2（并联拼合）</span>     <span class="layer-thick">0.3mm</span>   ← 压力感应层（胶带拼成一块）</div>
+<div><span class="layer-label">底层 PET 薄膜</span>          <span class="layer-thick">0.1mm</span>   ← FSR 与 PCB 之间的绝缘/支撑</div>
+<div><span class="layer-label">PCB 硬板 (FR-4)</span>         <span class="layer-thick">0.8mm</span>   ← 主控层（XIAO + 电阻 + 走线）</div>
+<div>  <span class="layer-label">└ XIAO nRF52840 Sense</span>   <span class="layer-thick">1.7mm</span>   ← 焊在 PCB 上（凸起部分）</div>
+<div><span class="layer-label">聚合物锂电池</span>           <span class="layer-thick">3.0mm</span>   ← 贴在 PCB 背面或并排</div>
+<div><span class="layer-label">底层 PET 薄膜</span>          <span class="layer-thick">0.1mm</span>   ← 封装底部</div>
+<div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px; margin-top: 4px;">───────────────────────────────────────────</div>
+<div class="layer-total" style="margin-top: 8px;">理论极限厚度：约 3.0mm（不含 XIAO 凸起和电池）</div>
+<div class="layer-total">实际厚度（含 XIAO 凸起）：约 4.0–4.5mm</div>
+      </div>
+
+      <div class="note-box blue reveal-up">
+        <strong>说明：</strong>XIAO 开发板（1.7mm）会凸出于 PCB（0.8mm），产品最厚处取决于 XIAO。
+        锂电池（303040，3mm 厚）贴在 PCB 背面，通过双面胶固定。
+      </div>
+
+      <!-- Area table -->
+      <h3 class="text-lg font-semibold mt-12 mb-4 reveal-up text-text-primary">面积估算</h3>
+      <div class="overflow-x-auto rounded-xl border border-border reveal-up">
+        <table class="spec-table">
+          <thead>
+            <tr><th>组件</th><th>尺寸</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>XIAO nRF52840 Sense</td><td>21 × 17.8 mm</td><td>主控板</td></tr>
+            <tr><td>FSR406 ×2（拼合）</td><td>~25 × 25 mm</td><td>两个圆形传感器拼在一起</td></tr>
+            <tr><td>聚合物锂电池</td><td>~30 × 20 × 3 mm</td><td>303040，贴在 PCB 背面</td></tr>
+            <tr><td>PCB 基板</td><td>~50 × 30 mm</td><td>容纳所有元件</td></tr>
+            <tr><td><strong class="hl">产品整体</strong></td><td><strong class="hl">~55 × 35 mm</strong></td><td><strong>约名片 1/3 大小</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- Divider -->
+  <div class="max-w-[800px] mx-auto h-px" style="background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);"></div>
+
+
+  <!-- ============ SECTION 2: PCB 原理图 ============ -->
+  <section class="py-16 relative" id="schematic">
+    <div class="max-w-[960px] mx-auto px-6 lg:px-8">
+
+      <div class="flex items-center gap-4 mb-10 reveal-up">
+        <div class="section-num bg-accent-orange/15 border border-accent-orange/25 text-accent-orange">2</div>
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">PCB 原理图（接线定义）</h2>
+      </div>
+
+      <!-- Pin table -->
+      <h3 class="text-lg font-semibold mb-4 reveal-up text-text-primary">核心连接表</h3>
+      <div class="overflow-x-auto rounded-xl border border-border reveal-up">
+        <table class="spec-table pin-table">
+          <thead>
+            <tr><th>XIAO 引脚</th><th>连接到</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>D0 (A0, P0.02)</td><td>FSR 信号线</td><td>两个 FSR 并联后的模拟输出 + 10KΩ 下拉到 GND；同时用于长按唤醒（GPIO 中断）</td></tr>
+            <tr><td>GND</td><td>公共地</td><td>所有 GND 连在一起</td></tr>
+            <tr><td>BAT+</td><td>锂电池正极</td><td>XIAO 自带 BQ25101 充电管理</td></tr>
+            <tr><td>BAT−</td><td>锂电池负极</td><td>= GND</td></tr>
+            <tr><td>5V (VBUS)</td><td>USB-C 供电/充电</td><td>插 USB-C 线时给电池充电并供电</td></tr>
+            <tr><td>3V3</td><td>悬空</td><td>XIAO 自带 3.3V 稳压输出</td></tr>
+            <tr><td>D4 (P0.04)</td><td>悬空</td><td>原 OLED SDA，已砍掉</td></tr>
+            <tr><td>D5 (P0.05)</td><td>悬空</td><td>原 OLED SCL，已砍掉</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note-box orange reveal-up">
+        <strong>关键：</strong>充电通过 XIAO 自带 USB-C 接口，插线即可给锂电池充电。<br>
+        <span class="hl">无需额外的充电电路</span>，XIAO 内置 BQ25101 充电管理 IC 自动处理 5V → 4.2V。
+      </div>
+
+      <!-- FSR circuit -->
+      <h3 class="text-lg font-semibold mt-12 mb-4 reveal-up text-text-primary">FSR 电路</h3>
+      <div class="section-box reveal-up">
+        <div class="code-block">
+                    VCC (3.3V)<br>
+                      │<br>
+                      ├── FSR-A ────┐<br>
+                      │             ├──→ D0 (A0)  &nbsp;← 模拟输出<br>
+                      └── FSR-B ────┘     │<br>
+                                        10KΩ<br>
+                                         │<br>
+                                        GND
+        </div>
+        <ul class="mt-4">
+          <li>两个 FSR406 引脚<span class="hl">无极性</span>，并联后一端接 3V3，另一端接 D0</li>
+          <li>10KΩ 贴片电阻（0402 封装）焊在 PCB 上，接 D0 和 GND 之间</li>
+          <li>FSR 通过极细导线（0.1mm 漆包线）从 PCB 边缘引出，焊到拼合后的 FSR 引脚</li>
+        </ul>
+      </div>
+
+      <!-- Power & wake -->
+      <h3 class="text-lg font-semibold mt-12 mb-4 reveal-up text-text-primary">电源与唤醒方案</h3>
+      <div class="section-box reveal-up">
+        <div class="code-block">
+  ┌──────────────────────────────────────────┐<br>
+  │              深度睡眠状态                 │<br>
+  │  待机功耗 &lt; 1µA，续航数周~数月           │<br>
+  │                                          │<br>
+  │  用户长按 FSR 超过 3 秒                  │<br>
+  │       │                                  │<br>
+  │       ▼                                  │<br>
+  │  D0 (A0) GPIO 中断唤醒                   │<br>
+  │       │                                  │<br>
+  │       ▼                                  │<br>
+  │  开始 BLE 广播，等待手机连接              │<br>
+  │       │                                  │<br>
+  │       ▼                                  │<br>
+  │  正常工作模式（节拍检测 + 压力流发送）     │<br>
+  │       │                                  │<br>
+  │  超时无连接（如 5 分钟）                  │<br>
+  │       │                                  │<br>
+  │       ▼                                  │<br>
+  │  回到深度睡眠 ──────────────► 循环       │<br>
+  └──────────────────────────────────────────┘<br><br>
+  充电：USB-C 插线 → BQ25101 自动充电 → 锂电池
+        </div>
+        <ul class="mt-4">
+          <li><strong class="text-text-primary">唤醒方式</strong>：D0 (A0) 引脚配置为 GPIO 感知（analogRead 检测 FSR 压力 > 阈值持续 3 秒）</li>
+          <li><strong class="text-text-primary">深度睡眠</strong>：nRF52840 System OFF 模式，功耗 &lt; 1µA</li>
+          <li><strong class="text-text-primary">自动关机</strong>：BLE 连接断开后 5 分钟无操作，自动进入深度睡眠</li>
+          <li><strong class="text-text-primary">充电</strong>：通过 XIAO USB-C 接口，BQ25101 内置充电管理，无需额外电路</li>
+          <li><strong class="text-text-primary">优势</strong>：零厚度增加（不需要物理开关），极低待机功耗</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- Divider -->
+  <div class="max-w-[800px] mx-auto h-px" style="background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);"></div>
+
+
+  <!-- ============ SECTION 3: PCB 布局 ============ -->
+  <section class="py-16 relative" id="layout">
+    <div class="glow-orb w-[400px] h-[400px] bg-accent-cyan/5 top-1/2 right-[-120px]" style="position:absolute;"></div>
+
+    <div class="max-w-[960px] mx-auto px-6 lg:px-8 relative z-10">
+
+      <div class="flex items-center gap-4 mb-10 reveal-up">
+        <div class="section-num bg-accent-green/15 border border-accent-green/25 text-accent-green">3</div>
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">PCB 布局方案</h2>
+      </div>
+
+      <!-- Spec table -->
+      <h3 class="text-lg font-semibold mb-4 reveal-up text-text-primary">推荐 PCB 规格</h3>
+      <div class="overflow-x-auto rounded-xl border border-border reveal-up">
+        <table class="spec-table">
+          <thead>
+            <tr><th>参数</th><th>值</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>板材</td><td>FR-4</td></tr>
+            <tr><td>板厚</td><td>0.8mm（超薄板，嘉立创支持）</td></tr>
+            <tr><td>层数</td><td>2 层（双面布线）</td></tr>
+            <tr><td>铜厚</td><td>1oz</td></tr>
+            <tr><td>表面处理</td><td>HASL（有铅喷锡，最便宜）</td></tr>
+            <tr><td>阻焊颜色</td><td>黑色（与产品外观一致）</td></tr>
+            <tr><td>最小线宽/间距</td><td>6/6mil</td></tr>
+            <tr><td>最小过孔</td><td>0.3mm</td></tr>
+            <tr><td>外形尺寸</td><td>50 × 30 mm（圆角 R3）</td></tr>
+            <tr><td>打样</td><td class="hl-green">嘉立创 5 元 / 5 片</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Layout diagram -->
+      <h3 class="text-lg font-semibold mt-12 mb-4 reveal-up text-text-primary">元件布局示意（俯视图）</h3>
+      <div class="section-box reveal-up">
+        <div class="code-block" style="font-size:12.5px;line-height:1.8;">
+  ┌──────────────────────────────────────────┐<br>
+  │           <span style="color:#ef4444;">50mm</span>                            │<br>
+  │  ┌─────────────────┐ ┌────────────────┐  │<br>
+  │  │                 │ │                │  │<br>
+  │  │   <span style="color:#10b981;">FSR 感应区域</span>    │ │  <span style="color:#f59e0b;">聚合物锂电池</span>  │  │<br>
+  │  │   (FSR-A+B 拼合) │ │  (303040)      │  │<br>
+  │  │                 │ │  贴在背面      │  │<br>
+  │  └────────┬────────┘ └────────────────┘  │<br>
+  │           │ FSR 导线                      │<br>
+  │  ┌────────┴──────────────────────────┐   │<br>
+  │  │                                   │   │<br>
+  │  │    <span style="color:#818cf8;">XIAO nRF52840</span>                │   │<br>
+  │  │    <span style="color:#818cf8;">Sense (焊盘区)</span>               │   │<br>
+  │  │                                   │   │<br>
+  │  │  D0 ← FSR信号（兼唤醒）            │   │<br>
+  │  │  BAT+ ← 锂电池正极                 │   │<br>
+  │  │  GND ─ 公共地                      │   │<br>
+  │  │                                   │   │<br>
+  │  │                          10KΩ      │   │<br>
+  │  │                          (0402)     │   │<br>
+  │  └───────────────────────────────────┘   │<br>
+  │             <span style="color:#ef4444;">30mm</span>                          │<br>
+  └──────────────────────────────────────────┘
+        </div>
+      </div>
+
+      <!-- XIAO pad design -->
+      <h3 class="text-lg font-semibold mt-12 mb-4 reveal-up text-text-primary">XIAO 焊盘设计</h3>
+      <div class="overflow-x-auto rounded-xl border border-border reveal-up">
+        <table class="spec-table">
+          <thead>
+            <tr><th>XIAO 板载焊盘</th><th>PCB 对应设计</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>正面 14 个引脚焊盘</td><td>通过过孔引到 PCB 正面，用 SMD 焊盘</td></tr>
+            <tr><td>背面 BAT+/BAT- 焊盘</td><td>PCB 对应位置放 SMD 焊盘</td></tr>
+            <tr><td>USB-C 接口</td><td>PCB 对应位置开缺口，USB-C 露出板边（用于固件烧录）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note-box blue reveal-up">
+        <strong>USB-C 缺口：</strong>XIAO 的 USB-C 接口需要露出来，用于固件烧录和调试。
+        可以在 PCB 边缘开一个 U 型缺口。产品封装时用薄膜覆盖即可，需要烧录时揭开。
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- Divider -->
+  <div class="max-w-[800px] mx-auto h-px" style="background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);"></div>
+
+
+  <!-- ============ SECTION 4: BOM ============ -->
+  <section class="py-16 relative" id="bom">
+    <div class="max-w-[960px] mx-auto px-6 lg:px-8">
+
+      <div class="flex items-center gap-4 mb-10 reveal-up">
+        <div class="section-num bg-accent-primary/15 border border-accent-primary/25 text-accent-glow">4</div>
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">BOM 采购清单</h2>
+      </div>
+
+      <h3 class="text-lg font-semibold mb-4 reveal-up text-text-primary">PCB 板上元件</h3>
+      <div class="overflow-x-auto rounded-xl border border-border reveal-up">
+        <table class="spec-table">
+          <thead>
+            <tr><th>序号</th><th>元件</th><th>规格</th><th>数量</th><th>参考价</th><th>采购渠道</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>定制 PCB</td><td>FR-4 0.8mm 双层 50×30mm 黑色</td><td>5</td><td>¥5</td><td>嘉立创</td></tr>
+            <tr><td>2</td><td>XIAO nRF52840 Sense</td><td>含 BLE + IMU + 2MB Flash</td><td>1</td><td>¥65</td><td>淘宝/立创</td></tr>
+            <tr><td>3</td><td>贴片电阻</td><td>10KΩ 0402</td><td>1</td><td>¥0.01</td><td>立创</td></tr>
+            <tr><td>4</td><td>FSR406 压力传感器</td><td>直径 12mm 圆形</td><td>2</td><td>¥5×2</td><td>淘宝</td></tr>
+            <tr><td>5</td><td>聚合物锂电池</td><td>3.7V 303040 (400mAh 3mm厚)</td><td>1</td><td>¥8</td><td>淘宝</td></tr>
+            <tr><td>6</td><td>PET 薄膜</td><td>透明 0.1mm 医用级</td><td>1 张</td><td>¥2</td><td>淘宝</td></tr>
+            <tr><td>7</td><td>医用双面胶</td><td>透气低敏型</td><td>1 卷</td><td>¥5</td><td>淘宝</td></tr>
+            <tr><td>8</td><td>漆包线</td><td>0.1mm聚氨酯</td><td>1 米</td><td>¥1</td><td>万能的淘宝</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-6 reveal-up">
+        <div class="inline-flex items-center gap-3 px-6 py-4 rounded-2xl bg-accent-green/10 border border-accent-green/20">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span class="font-semibold text-lg text-accent-green">单片样品总成本估算：约 ¥91（不含焊接工具）</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- Divider -->
+  <div class="max-w-[800px] mx-auto h-px" style="background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);"></div>
+
+
+  <!-- ============ SECTION 5: 制作流程 ============ -->
+  <section class="py-16 relative" id="process">
+    <div class="max-w-[960px] mx-auto px-6 lg:px-8">
+
+      <div class="flex items-center gap-4 mb-10 reveal-up">
+        <div class="section-num bg-accent-cyan/15 border border-accent-cyan/25 text-accent-cyan">5</div>
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">制作流程</h2>
+      </div>
+
+      <div class="overflow-x-auto rounded-xl border border-border reveal-up">
+        <table class="spec-table">
+          <thead>
+            <tr><th style="width:50px;">步骤</th><th>操作</th><th style="width:110px;">耗时</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>1</strong></td><td><strong class="text-text-primary">下单 PCB</strong> — 嘉立创上传 Gerber，选 0.8mm 黑色 HASL</td><td>3–5 天</td></tr>
+            <tr><td><strong>2</strong></td><td><strong class="text-text-primary">采购元件</strong> — 同时下单 XIAO + FSR + 电池 + 薄膜</td><td>3–5 天</td></tr>
+            <tr><td><strong>3</strong></td><td><strong class="text-text-primary">焊接 PCB</strong> — 先焊 10KΩ 电阻，再焊 XIAO 到 PCB 焊盘</td><td>1–2 小时</td></tr>
+            <tr><td><strong>4</strong></td><td><strong class="text-text-primary">焊接 FSR</strong> — 用漆包线将并联 FSR 连到 PCB 的 D0/GND</td><td>30 分钟</td></tr>
+            <tr><td><strong>5</strong></td><td><strong class="text-text-primary">焊接电池</strong> — BAT+/BAT- 焊线连接锂电池</td><td>15 分钟</td></tr>
+            <tr><td><strong>6</strong></td><td><strong class="text-text-primary">烧录固件</strong> — USB-C 连电脑，Arduino IDE 上传固件（含深度睡眠+唤醒）</td><td>5 分钟</td></tr>
+            <tr><td><strong>7</strong></td><td><strong class="text-text-primary">封装</strong> — PET 薄膜 + 双面胶 包裹，FSR 面朝上</td><td>30 分钟</td></tr>
+            <tr><td><strong>8</strong></td><td><strong class="text-text-primary">测试</strong> — 长按 FSR 3 秒唤醒 → 连手机 App 蓝牙 → 测试节拍检测</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- Divider -->
+  <div class="max-w-[800px] mx-auto h-px" style="background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);"></div>
+
+
+  <!-- ============ SECTION 6: 注意事项 ============ -->
+  <section class="py-16 relative" id="notes">
+    <div class="max-w-[960px] mx-auto px-6 lg:px-8">
+
+      <div class="flex items-center gap-4 mb-10 reveal-up">
+        <div class="section-num bg-accent-orange/15 border border-accent-orange/25 text-accent-orange">6</div>
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">注意事项与风险</h2>
+      </div>
+
+      <div class="space-y-4 reveal-up">
+        <div class="note-box red">
+          <strong>⚠️ XIAO 焊接难度：</strong>XIAO 是 SMD 元件，焊盘间距较小。建议用电烙铁 + 细焊丝（0.5mm）+ 助焊剂。
+          先在 PCB 焊盘上上锡，再把 XIAO 对准放上去，用烙铁逐个引脚熔合。如果有热风枪会更容易。
+        </div>
+
+        <div class="note-box green">
+          <strong>✅ 充电无需额外电路：</strong>XIAO 自带 USB-C 接口 + BQ25101 充电管理 IC，插线即可充电。
+          产品上只需预留 USB-C 接口露出位置。
+        </div>
+
+        <div class="note-box green">
+          <strong>✅ 深度睡眠零额外元件：</strong>唤醒方案通过固件实现，利用 nRF52840 的 System OFF 模式 + GPIO 中断，
+          不需要物理开关，不增加厚度，待机功耗 &lt; 1µA。
+        </div>
+
+        <div class="note-box blue">
+          <strong>ℹ️ 深度睡眠需要改固件：</strong>当前固件是持续运行模式，需要新增：<br>
+          (1) System OFF 睡眠 API 调用；(2) 长按 3 秒唤醒逻辑；(3) 自动超时关机（5 分钟无连接）。<br>
+          代码改动不大，但需要在 PCB 打样前测试确认 nRF52840 的 D0 引脚支持 GPIO 感知唤醒。
+        </div>
+
+        <div class="note-box green">
+          <strong>✅ App 无需修改：</strong>BLE 协议不变，App 直接连接使用。
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- Divider -->
+  <div class="max-w-[800px] mx-auto h-px" style="background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);"></div>
+
+
+  <!-- ============ SECTION 7: 下一步 ============ -->
+  <section class="py-16 relative" id="next">
+    <div class="max-w-[960px] mx-auto px-6 lg:px-8">
+
+      <div class="flex items-center gap-4 mb-10 reveal-up">
+        <div class="section-num bg-accent-glow/15 border border-accent-glow/25 text-accent-glow">7</div>
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">下一步</h2>
+      </div>
+
+      <ol class="space-y-3 ml-6 reveal-up" style="list-style-type:decimal;">
+        <li class="text-text-secondary text-base leading-relaxed">确认方案无误 → 生成 <strong class="text-text-primary">Gerber 文件</strong>（或 KiCad 工程）</li>
+        <li class="text-text-secondary text-base leading-relaxed">上传 Gerber 到嘉立创下单 PCB</li>
+        <li class="text-text-secondary text-base leading-relaxed">同时采购其他元件</li>
+        <li class="text-text-secondary text-base leading-relaxed">等 PCB 到货 → 焊接 → 测试</li>
+      </ol>
+
+      <div class="note-box blue mt-8 reveal-up">
+        <strong>需要确认的事项：</strong>
+        <ul class="mt-2 space-y-1">
+          <li>PCB 尺寸 50×30mm 是否合适？需要调整吗？</li>
+          <li>USB-C 接口要露出来用于充电和烧录，OK 吗？</li>
+          <li>自动关机时间 5 分钟是否合适？</li>
+        </ul>
+      </div>
+
+      <!-- CTA back to home -->
+      <div class="mt-14 reveal-up text-center">
+        <a href="index.html" class="btn-primary inline-flex items-center gap-2" style="padding:14px 36px;border-radius:12px;font-size:15px;font-weight:600;background:linear-gradient(135deg,#6366f1,#5558e6);color:white;text-decoration:none;transition:all 0.3s ease;">
+          <span>返回首页查看完整展示 →</span>
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============ FOOTER (mini) ============ -->
+  <footer class="py-10 border-t border-border">
+    <div class="max-w-[960px] mx-auto px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <span class="text-xs text-text-muted">© 2026 理想节拍 · All rights reserved.</span>
+      <a href="index.html" class="text-xs text-text-muted hover:text-accent-glow transition-colors">← 返回首页</a>
+    </div>
+  </footer>
+
+
+  <!-- ======================== JAVASCRIPT ======================== -->
+  <script>
+    // ===== LENIS SMOOTH SCROLL =====
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+    });
+
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+
+    // ===== NAVBAR =====
+    const navbar = document.getElementById('navbar');
+
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 40) {
+        navbar.classList.remove('nav-transparent');
+        navbar.classList.add('nav-glass');
+      } else {
+        navbar.classList.add('nav-transparent');
+        navbar.classList.remove('nav-glass');
+      }
+    }, { passive: true });
+
+
+    // ===== MOBILE MENU =====
+    function toggleMenu() {
+      const menu = document.getElementById('mobileMenu');
+      menu.classList.toggle('open');
+      document.body.style.overflow = menu.classList.contains('open') ? 'hidden' : '';
+    }
+
+
+    // ===== GSAP REVEALS =====
+    document.addEventListener('DOMContentLoaded', () => {
+      gsap.registerPlugin && null; // GSAP optional on this page
+      // Simple IntersectionObserver fallback
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+      document.querySelectorAll('.reveal-up').forEach(el => observer.observe(el));
+    });
+  </script>
+
+  <!-- GSAP (for reveals) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script>
+    // Override with GSAP-powered reveals if loaded
+    if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+      gsap.registerPlugin(ScrollTrigger);
+      gsap.utils.toArray('.reveal-up').forEach(el => {
+        gsap.to(el, {
+          scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none none' },
+          opacity: 1, y: 0, duration: 0.7, ease: 'power3.out'
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>
