@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>多工厂降本管理系统 | Sudian Xu</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: { primary: '#0a0a0f', secondary: '#111118', card: '#171723', elevated: '#1f2230' },
+            text: { primary: '#f4f7fb', secondary: '#a2abc0', muted: '#6a7387' },
+            accent: { primary: '#6366f1', glow: '#818cf8', cyan: '#22d3ee', green: '#34d399', amber: '#f59e0b' }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans SC', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: auto; }
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+      color: #f4f7fb;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at top left, rgba(99,102,241,0.18), transparent 28%),
+        radial-gradient(circle at 85% 0%, rgba(34,211,238,0.1), transparent 24%),
+        linear-gradient(180deg, #090a0f 0%, #0d1017 36%, #0a0a0f 100%);
+      -webkit-font-smoothing: antialiased;
+    }
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(circle at center, black 36%, transparent 92%);
+      -webkit-mask-image: radial-gradient(circle at center, black 36%, transparent 92%);
+    }
+    .nav-shell {
+      backdrop-filter: blur(18px) saturate(180%);
+      -webkit-backdrop-filter: blur(18px) saturate(180%);
+      background: rgba(10,10,15,0.72);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-transparent { background: transparent; border-bottom-color: transparent; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 8px 14px; border-radius: 999px;
+      border: 1px solid rgba(129,140,248,0.24);
+      background: rgba(99,102,241,0.08); color: #c7d2fe;
+      font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .eyebrow::before {
+      content: ''; width: 7px; height: 7px; border-radius: 999px;
+      background: linear-gradient(135deg, #22d3ee, #818cf8);
+      box-shadow: 0 0 16px rgba(34,211,238,0.48);
+    }
+    .panel, .metric-card, .section-card, .flow-card, .schema-card {
+      position: relative; border-radius: 28px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(22,24,33,0.92), rgba(16,18,27,0.78));
+      box-shadow: 0 24px 60px -32px rgba(0,0,0,0.8);
+    }
+    .panel::before, .metric-card::before, .section-card::before, .flow-card::before, .schema-card::before {
+      content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.14), transparent 36%, rgba(99,102,241,0.18));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+    }
+    .tag-chip, .status-pill {
+      display: inline-flex; align-items: center; border-radius: 999px;
+      font-size: 12px; line-height: 1; font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); color: #d4dded;
+    }
+    .tag-chip { padding: 8px 12px; }
+    .helper-kicker {
+      font-size: 11px;
+      color: #7d879c;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 10px;
+    }
+    .status-pill {
+      padding: 9px 13px;
+      color: #c7d2fe;
+      background: rgba(99,102,241,0.12);
+      border-color: rgba(129,140,248,0.22);
+    }
+    .nav-link {
+      color: #a2abc0; text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.25s ease;
+    }
+    .nav-link:hover { color: #f4f7fb; }
+    .mobile-menu {
+      position: fixed; inset: 0; z-index: 45; background: rgba(9,10,15,0.94);
+      backdrop-filter: blur(18px); transform: translateY(-100%); transition: transform 0.35s ease;
+      display: flex; flex-direction: column; justify-content: center; gap: 22px; padding: 32px;
+    }
+    .mobile-menu.open { transform: translateY(0); }
+    .hamburger {
+      width: 44px; height: 44px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03); color: #f4f7fb; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .focus-ring:focus-visible, a:focus-visible, button:focus-visible {
+      outline: 2px solid rgba(34,211,238,0.92); outline-offset: 3px;
+    }
+    .section-anchor { scroll-margin-top: 96px; }
+    .before-after {
+      display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 18px; align-items: stretch;
+    }
+    .migration-flow {
+      display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 12px; align-items: stretch;
+    }
+    .flow-arrow { display: flex; align-items: center; justify-content: center; color: #818cf8; font-size: 20px; }
+    .flow-card { padding: 18px 14px; min-height: 128px; }
+    .problem-grid,
+    .status-grid,
+    .ui-stat-grid,
+    .import-stat-grid {
+      display: grid;
+      gap: 14px;
+    }
+    .problem-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ui-stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .import-stat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .problem-card,
+    .status-card,
+    .ui-shell,
+    .import-shell,
+    .trial-card {
+      position: relative;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      overflow: hidden;
+    }
+    .problem-card,
+    .status-card,
+    .trial-card,
+    .ui-shell,
+    .import-shell {
+      padding: 18px;
+    }
+    .problem-card::before,
+    .status-card::before,
+    .trial-card::before,
+    .ui-shell::before,
+    .import-shell::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent 45%, rgba(99,102,241,0.14));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+    .problem-step {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 7px 10px;
+      margin-bottom: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #cdd6f8;
+      background: rgba(99,102,241,0.1);
+      border: 1px solid rgba(129,140,248,0.16);
+      text-transform: uppercase;
+    }
+    .mini-list {
+      margin: 0;
+      padding-left: 18px;
+      color: #aeb8cb;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    .mini-list li + li { margin-top: 6px; }
+    .schema-stack {
+      display: grid; gap: 12px;
+    }
+    .schema-row {
+      display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center;
+    }
+    .node {
+      border-radius: 18px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
+      padding: 16px 18px; text-align: center; font-size: 15px; color: #d4dded;
+    }
+    .ui-toolbar,
+    .import-toolbar,
+    .table-row,
+    .preview-row {
+      display: grid;
+      gap: 10px;
+      align-items: center;
+    }
+    .ui-toolbar {
+      grid-template-columns: 1.2fr 0.9fr 0.9fr;
+      margin-bottom: 14px;
+    }
+    .import-toolbar {
+      grid-template-columns: 1.2fr 0.8fr auto;
+      margin-bottom: 14px;
+    }
+    .toolbar-chip,
+    .table-cell,
+    .import-chip {
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.035);
+      padding: 11px 12px;
+      color: #d8e0ed;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .table-wrap,
+    .preview-wrap {
+      display: grid;
+      gap: 10px;
+    }
+    .table-header,
+    .table-row {
+      grid-template-columns: 1.2fr 0.9fr 0.9fr 0.8fr 0.8fr 0.9fr;
+    }
+    .preview-row {
+      grid-template-columns: 1.1fr 0.9fr 0.8fr 1fr;
+    }
+    .public-demo-card {
+      position: relative;
+      border-radius: 28px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(22,24,33,0.92), rgba(16,18,27,0.78));
+      box-shadow: 0 24px 60px -32px rgba(0,0,0,0.8);
+    }
+    .public-demo-card img {
+      width: 100%;
+      display: block;
+      border-radius: 22px;
+      object-fit: cover;
+    }
+    .public-demo-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .github-demo-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 18px;
+      border-radius: 14px;
+      border: 1px solid rgba(129,140,248,0.24);
+      background: rgba(99,102,241,0.12);
+      color: #eef2ff;
+      text-decoration: none;
+      font-weight: 600;
+      transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+    }
+    .github-demo-link:hover {
+      transform: translateY(-2px);
+      background: rgba(99,102,241,0.18);
+      border-color: rgba(129,140,248,0.34);
+    }
+    .table-header .table-cell,
+    .preview-header .table-cell {
+      color: #8f99ad;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 11px;
+      background: rgba(99,102,241,0.08);
+      border-color: rgba(129,140,248,0.16);
+    }
+    .table-row .table-cell strong,
+    .preview-row .table-cell strong {
+      display: block;
+      font-size: 13px;
+      color: #f4f7fb;
+      margin-bottom: 2px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: #dde5f2;
+    }
+    .badge.cyan {
+      background: rgba(34,211,238,0.08);
+      border-color: rgba(34,211,238,0.16);
+      color: #c9f4fb;
+    }
+    .badge.indigo {
+      background: rgba(99,102,241,0.1);
+      border-color: rgba(129,140,248,0.16);
+      color: #d7dcff;
+    }
+    .badge.amber {
+      background: rgba(245,158,11,0.08);
+      border-color: rgba(245,158,11,0.16);
+      color: #ffe3b3;
+    }
+    .badge.green {
+      background: rgba(52,211,153,0.08);
+      border-color: rgba(52,211,153,0.16);
+      color: #cbfae7;
+    }
+    .stat-box {
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.035);
+      padding: 16px;
+    }
+    .stat-box .kpi {
+      display: block;
+      margin-top: 8px;
+      font-size: 24px;
+      font-weight: 800;
+      color: #f4f7fb;
+    }
+    .preview-header {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr 0.8fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    @media (max-width: 1180px) {
+      .migration-flow { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .flow-arrow { display: none; }
+      .import-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 768px) {
+      .before-after { grid-template-columns: 1fr; }
+      .schema-row { grid-template-columns: 1fr; }
+      .problem-grid,
+      .status-grid,
+      .ui-stat-grid {
+        grid-template-columns: 1fr;
+      }
+      .ui-toolbar,
+      .import-toolbar,
+      .table-header,
+      .table-row,
+      .preview-header,
+      .preview-row {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 640px) {
+      .migration-flow { grid-template-columns: 1fr; }
+      .flow-card { min-height: unset; }
+      .import-stat-grid { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+      html { scroll-behavior: smooth; }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-overlay"></div>
+
+  <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-500 nav-transparent">
+    <div class="max-w-[1240px] mx-auto px-5 lg:px-8">
+      <div class="min-h-[72px] flex items-center justify-between">
+        <a href="index.html" class="focus-ring inline-flex items-center gap-3 no-underline text-text-primary">
+          <span class="w-10 h-10 rounded-2xl border border-accent-cyan/30 bg-gradient-to-br from-accent-cyan/20 via-accent-primary/18 to-white/5 flex items-center justify-center ring-1 ring-white/10">
+            <span class="font-mono text-lg font-bold tracking-normal text-accent-cyan">S</span>
+          </span>
+          <span class="flex flex-col">
+            <span class="text-sm font-semibold tracking-wide">Sudian Xu</span>
+            <span class="text-[11px] text-text-muted">Case Study</span>
+          </span>
+        </a>
+
+        <div class="hidden md:flex items-center gap-8">
+          <a href="index.html" class="nav-link">← Portfolio</a>
+          <a href="#migration" class="nav-link">迁移路径</a>
+          <a href="#design" class="nav-link">系统设计</a>
+          <a href="#trial" class="nav-link">试点验证</a>
+          <a href="#reflection" class="nav-link">复盘</a>
+        </div>
+
+        <button class="hamburger md:hidden focus-ring" type="button" aria-label="Open menu" onclick="toggleMenu()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div id="mobileMenu" class="mobile-menu md:hidden">
+    <a href="index.html" class="text-3xl font-semibold text-text-primary no-underline" onclick="toggleMenu()">← Portfolio</a>
+    <a href="#migration" class="text-3xl font-semibold text-text-primary no-underline" onclick="toggleMenu()">迁移路径</a>
+    <a href="#design" class="text-3xl font-semibold text-text-primary no-underline" onclick="toggleMenu()">系统设计</a>
+    <a href="#trial" class="text-3xl font-semibold text-text-primary no-underline" onclick="toggleMenu()">试点验证</a>
+    <a href="#reflection" class="text-3xl font-semibold text-accent-cyan no-underline" onclick="toggleMenu()">复盘</a>
+  </div>
+
+  <main class="relative pt-32 pb-14 sm:pt-36 lg:pt-40 lg:pb-20">
+    <section class="max-w-[1240px] mx-auto px-5 lg:px-8 mb-16">
+      <div class="grid lg:grid-cols-[1.02fr_0.98fr] gap-8 items-center">
+        <div class="reveal-up">
+          <div class="eyebrow mb-6">企业数字化 · 脱敏案例 Enterprise Digitalization · Anonymized Case Study</div>
+          <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.04] mb-5">
+            多工厂降本管理系统
+            <span class="block text-[0.4em] leading-[1.25] mt-4 text-text-secondary font-medium">Multi-site Cost Management System</span>
+          </h1>
+          <p class="text-lg sm:text-xl text-text-secondary leading-8 max-w-3xl mb-8">
+            将复杂 Excel 降本台账逐步转化为支持批量导入、数据治理、工厂隔离与试点验证的结构化系统。
+          </p>
+          <div class="flex flex-wrap gap-3 mb-8">
+            <span class="tag-chip">Enterprise Digitalization</span>
+            <span class="tag-chip">Excel</span>
+            <span class="tag-chip">MySQL</span>
+            <span class="tag-chip">Data Governance</span>
+            <span class="tag-chip">Batch Import</span>
+            <span class="tag-chip">Workflow</span>
+          </div>
+          <div class="panel p-5 sm:p-6 max-w-3xl">
+            <p class="m-0 text-sm sm:text-[15px] text-text-secondary leading-7">
+              本页面中的流程、界面与数据均经过脱敏或重新绘制，仅用于展示数字化设计思路。
+              不包含真实公司名称、内部 Excel 原件、内部 URL、真实账户或敏感业务数据。
+            </p>
+          </div>
+        </div>
+
+        <div class="panel p-6 sm:p-7 reveal-up">
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="metric-card p-5">
+              <div class="helper-kicker">Workbook Scale</div>
+              <div class="text-4xl font-bold">30+</div>
+              <div class="text-sm text-text-secondary mt-3">Sheets 需要被纳入同一套历史迁移和数据结构梳理</div>
+            </div>
+            <div class="metric-card p-5">
+              <div class="helper-kicker">Formula Density</div>
+              <div class="text-4xl font-bold">4000+</div>
+              <div class="text-sm text-text-secondary mt-3">Formulas 需要在迁移、校验与逻辑还原时被认真考虑</div>
+            </div>
+          </div>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div class="section-card p-5">
+              <div class="helper-kicker">Core Transformation</div>
+              <div class="text-2xl sm:text-3xl font-semibold leading-tight">Excel</div>
+              <div class="text-center text-accent-glow text-2xl my-3">↓</div>
+              <div class="text-2xl sm:text-3xl font-semibold leading-tight">Structured System</div>
+            </div>
+            <div class="section-card p-5">
+              <div class="helper-kicker">Project Framing</div>
+              <div class="grid gap-3 text-[15px] leading-7 text-text-secondary">
+                <div><strong class="text-text-primary font-semibold">项目类型：</strong>企业数字化 / Enterprise Digitalization</div>
+                <div><strong class="text-text-primary font-semibold">我的职责：</strong>需求拆解、数据结构、导入流程、系统 Demo、试点支持</div>
+                <div><strong class="text-text-primary font-semibold">项目阶段：</strong>Runnable Demo / Trial</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-[1240px] mx-auto px-5 lg:px-8 py-8 lg:py-10">
+      <div class="reveal-up mb-8">
+        <div class="eyebrow mb-5">项目背景 Project Background</div>
+        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mb-4">这不是“把 Excel 做成网页”，而是先把复杂业务结构化</h2>
+        <p class="text-text-secondary text-base sm:text-lg max-w-3xl leading-8">
+          原业务并不是一个普通表格，而是一套依赖 30+ Sheets、4000+ Formulas、多工厂数据和大量手工维护才能勉强运转的历史台账。这个项目的目标，是让字段结构、数据迁移、校验规则与试点落地逐步变得可控。
+        </p>
+      </div>
+      <div class="grid md:grid-cols-4 gap-4 mb-6">
+        <div class="metric-card p-5 reveal-up">
+          <div class="helper-kicker">Scale</div>
+          <div class="text-3xl font-bold">30+ Sheets</div>
+          <p class="m-0 mt-3 text-sm text-text-secondary leading-7">不是单页表格，而是跨多 Sheet 的历史业务流程。</p>
+        </div>
+        <div class="metric-card p-5 reveal-up">
+          <div class="helper-kicker">Formula Logic</div>
+          <div class="text-3xl font-bold">4000+ Formulas</div>
+          <p class="m-0 mt-3 text-sm text-text-secondary leading-7">字段依赖关系复杂，迁移时不能只看界面和字段名。</p>
+        </div>
+        <div class="metric-card p-5 reveal-up">
+          <div class="helper-kicker">Data Scope</div>
+          <div class="text-3xl font-bold">Multiple Sites</div>
+          <p class="m-0 mt-3 text-sm text-text-secondary leading-7">不同工厂的数据口径、记录方式与权限边界需要被区分。</p>
+        </div>
+        <div class="metric-card p-5 reveal-up">
+          <div class="helper-kicker">Manual Workflow</div>
+          <div class="text-3xl font-bold">Heavy Maintenance</div>
+          <p class="m-0 mt-3 text-sm text-text-secondary leading-7">汇总、追踪和异常修正高度依赖人工维护，历史数据也不能直接丢弃。</p>
+        </div>
+      </div>
+      <div class="before-after">
+        <article class="section-card p-6 sm:p-7 reveal-up">
+          <div class="helper-kicker">Before</div>
+          <h3 class="text-2xl font-semibold mb-4">复杂 Excel</h3>
+          <ul class="mini-list">
+            <li>多 Sheet 叠加，大量公式耦合在历史流程里</li>
+            <li>记录分散、字段不统一、人工维护成本高</li>
+            <li>多工厂数据汇总与追踪困难</li>
+            <li>历史数据不能简单放弃重来</li>
+          </ul>
+        </article>
+        <div class="text-center text-accent-glow text-3xl reveal-up">↓</div>
+        <article class="section-card p-6 sm:p-7 reveal-up">
+          <div class="helper-kicker">Transformation</div>
+          <h3 class="text-2xl font-semibold mb-4">结构化迁移</h3>
+          <ul class="mini-list">
+            <li>字段梳理与统一数据结构</li>
+            <li>Batch Import、数据校验与 Deduplication</li>
+            <li>权限控制与工厂隔离</li>
+            <li>Preview、人工确认与试点反馈</li>
+          </ul>
+        </article>
+        <div class="text-center text-accent-glow text-3xl reveal-up">↓</div>
+        <article class="section-card p-6 sm:p-7 reveal-up">
+          <div class="helper-kicker">After</div>
+          <h3 class="text-2xl font-semibold mb-4">Structured System</h3>
+          <ul class="mini-list">
+            <li>统一项目台账与结构化数据</li>
+            <li>批量导入、校验、去重流程</li>
+            <li>工厂隔离、项目查询与状态管理</li>
+            <li>形成可运行系统并进入 Trial 验证</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="migration" class="section-anchor max-w-[1240px] mx-auto px-5 lg:px-8 py-10">
+      <div class="reveal-up mb-8">
+        <div class="eyebrow mb-5">迁移路径 Data Migration Flow</div>
+        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mb-4">真正困难的不是上传文件，而是把历史数据迁得可控</h2>
+        <p class="text-text-secondary text-base sm:text-lg max-w-3xl leading-8">
+          迁移流程需要兼顾字段映射、异常识别、重复记录处理和人工确认，避免把历史 Excel 中的问题原样带进系统。
+        </p>
+      </div>
+      <div class="migration-flow">
+        <div class="flow-card reveal-up"><div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-3">01</div><div class="text-lg font-semibold mb-3">Excel</div><p class="m-0 text-text-secondary text-sm leading-7">从原有工作簿与历史记录开始，不强行要求全部重录。</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-card reveal-up"><div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-3">02</div><div class="text-lg font-semibold mb-3">文件解析</div><p class="m-0 text-text-secondary text-sm leading-7">读取 Sheet、行列与原始结构。</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-card reveal-up"><div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-3">03</div><div class="text-lg font-semibold mb-3">字段映射</div><p class="m-0 text-text-secondary text-sm leading-7">把原有 Excel 列映射到统一数据结构。</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-card reveal-up"><div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-3">04</div><div class="text-lg font-semibold mb-3">数据校验</div><p class="m-0 text-text-secondary text-sm leading-7">检查必填字段、格式问题与异常记录。</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-card reveal-up"><div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-3">05</div><div class="text-lg font-semibold mb-3">去重检查</div><p class="m-0 text-text-secondary text-sm leading-7">避免重复项目或冲突记录再次写入。</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-card reveal-up"><div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-3">06</div><div class="text-lg font-semibold mb-3">Preview</div><p class="m-0 text-text-secondary text-sm leading-7">正式保存前先让人看到映射结果。</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-card reveal-up"><div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-3">07</div><div class="text-lg font-semibold mb-3">编辑 / 排除</div><p class="m-0 text-text-secondary text-sm leading-7">对问题记录做修正、排除或延后处理。</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-card reveal-up"><div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-3">08</div><div class="text-lg font-semibold mb-3">Batch Save</div><p class="m-0 text-text-secondary text-sm leading-7">按批次保存结构化记录，保留可追踪链路。</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-card reveal-up"><div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-3">09</div><div class="text-lg font-semibold mb-3">MySQL</div><p class="m-0 text-text-secondary text-sm leading-7">进入可查询、可隔离、可继续验证的结构化数据库。</p></div>
+      </div>
+    </section>
+
+    <section id="design" class="section-anchor max-w-[1240px] mx-auto px-5 lg:px-8 py-10">
+      <div class="reveal-up mb-8">
+        <div class="eyebrow mb-5">核心问题 Core Product Problems</div>
+        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mb-4">系统真正困难的地方，不在于页面，而在于数据和迁移策略</h2>
+      </div>
+      <div class="problem-grid mb-6">
+        <article class="problem-card reveal-up">
+          <div class="problem-step">01 · 字段统一</div>
+          <h3 class="text-2xl font-semibold mb-3">历史 Excel 并不天然符合系统结构</h3>
+          <ul class="mini-list">
+            <li><strong class="text-text-primary">为什么重要：</strong>不同 Sheet 和工厂对同一字段的理解可能并不一致。</li>
+            <li><strong class="text-text-primary">设计选择：</strong>先做字段梳理，再映射到统一的数据模型。</li>
+          </ul>
+        </article>
+        <article class="problem-card reveal-up">
+          <div class="problem-step">02 · 历史数据迁移</div>
+          <h3 class="text-2xl font-semibold mb-3">不能要求用户重录全部旧数据</h3>
+          <ul class="mini-list">
+            <li><strong class="text-text-primary">为什么重要：</strong>旧数据本身承载了项目追踪和业务连续性。</li>
+            <li><strong class="text-text-primary">设计选择：</strong>通过 Batch Import、Preview 和人工确认支持渐进迁移。</li>
+          </ul>
+        </article>
+        <article class="problem-card reveal-up">
+          <div class="problem-step">03 · 重复数据处理</div>
+          <h3 class="text-2xl font-semibold mb-3">批量导入必须识别重复与异常</h3>
+          <ul class="mini-list">
+            <li><strong class="text-text-primary">为什么重要：</strong>如果重复项目被直接写入，系统很快会失去可信度。</li>
+            <li><strong class="text-text-primary">设计选择：</strong>在导入前做 Deduplication、异常标记与排除处理。</li>
+          </ul>
+        </article>
+        <article class="problem-card reveal-up">
+          <div class="problem-step">04 · 多工厂隔离</div>
+          <h3 class="text-2xl font-semibold mb-3">共享系统不等于共享全部数据</h3>
+          <ul class="mini-list">
+            <li><strong class="text-text-primary">为什么重要：</strong>不同工厂需要看到属于自己的业务数据和账号范围。</li>
+            <li><strong class="text-text-primary">设计选择：</strong>把 Factory、User / Role 与项目数据访问边界一起考虑。</li>
+          </ul>
+        </article>
+        <article class="problem-card reveal-up md:col-span-2">
+          <div class="problem-step">05 · 新旧流程共存</div>
+          <h3 class="text-2xl font-semibold mb-3">系统上线的第一天，Excel 往往不会立刻消失</h3>
+          <ul class="mini-list">
+            <li><strong class="text-text-primary">为什么重要：</strong>真实业务需要先试点、再适应、再逐步迁移工作方式。</li>
+            <li><strong class="text-text-primary">设计选择：</strong>以 Trial 为阶段目标，让系统先跑通核心数据链路，而不是直接宣称全面替代。</li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="grid lg:grid-cols-[0.9fr_1.1fr] gap-6 mb-6">
+        <article class="section-card p-6 sm:p-7 reveal-up">
+          <div class="eyebrow mb-5">系统与数据设计 System / Data Design</div>
+          <p class="text-text-secondary text-base sm:text-lg leading-8 mt-0 mb-5">
+            这一页更想说明的是：我考虑过业务实体之间的关系，而不只是把数据库表名列出来。
+          </p>
+          <div class="schema-stack">
+            <div class="schema-row">
+              <div class="node">Group / Organization</div>
+              <div class="text-center text-accent-glow">↓</div>
+              <div class="node">Factory</div>
+            </div>
+            <div class="schema-row">
+              <div class="node">Department / User</div>
+              <div class="text-center text-accent-glow">↓</div>
+              <div class="node">Cost Reduction Project</div>
+            </div>
+            <div class="schema-row">
+              <div class="node">Project Category / Status</div>
+              <div class="text-center text-accent-glow">↓</div>
+              <div class="node">Import Record / Trial State</div>
+            </div>
+            <div class="schema-row">
+              <div class="node">User / Role</div>
+              <div class="text-center text-accent-glow">↓</div>
+              <div class="node">Access Scope / Factory Isolation</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="ui-shell reveal-up">
+          <div class="eyebrow mb-5">重绘系统界面 Recreated System UI</div>
+          <div class="ui-toolbar">
+            <div class="toolbar-chip"><strong class="text-text-primary block mb-1">当前工厂</strong>Factory North Plant</div>
+            <div class="toolbar-chip"><strong class="text-text-primary block mb-1">项目统计</strong>Active Projects</div>
+            <div class="toolbar-chip"><strong class="text-text-primary block mb-1">批量导入</strong><span class="badge indigo">Import Ready</span></div>
+          </div>
+          <div class="ui-stat-grid mb-4">
+            <div class="stat-box">
+              <span class="helper-kicker">Tracked Projects</span>
+              <span class="kpi">48</span>
+            </div>
+            <div class="stat-box">
+              <span class="helper-kicker">Factories In Scope</span>
+              <span class="kpi">3</span>
+            </div>
+            <div class="stat-box">
+              <span class="helper-kicker">Trial Status</span>
+              <span class="kpi">Ready</span>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <div class="table-header">
+              <div class="table-cell">项目名称</div>
+              <div class="table-cell">所属工厂</div>
+              <div class="table-cell">项目分类</div>
+              <div class="table-cell">当前状态</div>
+              <div class="table-cell">负责人</div>
+              <div class="table-cell">更新时间</div>
+            </div>
+            <div class="table-row">
+              <div class="table-cell"><strong>Cooling Loop Review</strong>Synthetic tracking record</div>
+              <div class="table-cell"><span class="badge cyan">North Plant</span></div>
+              <div class="table-cell">Energy</div>
+              <div class="table-cell"><span class="badge green">In Trial</span></div>
+              <div class="table-cell">Z. Chen</div>
+              <div class="table-cell">2026-08-10</div>
+            </div>
+            <div class="table-row">
+              <div class="table-cell"><strong>Packaging Material Update</strong>Recreated example item</div>
+              <div class="table-cell"><span class="badge cyan">East Plant</span></div>
+              <div class="table-cell">Material</div>
+              <div class="table-cell"><span class="badge indigo">Need Review</span></div>
+              <div class="table-cell">M. Liu</div>
+              <div class="table-cell">2026-08-08</div>
+            </div>
+            <div class="table-row">
+              <div class="table-cell"><strong>Compressed Air Audit</strong>Trial environment item</div>
+              <div class="table-cell"><span class="badge cyan">South Plant</span></div>
+              <div class="table-cell">Operation</div>
+              <div class="table-cell"><span class="badge amber">Pending Import</span></div>
+              <div class="table-cell">J. Sun</div>
+              <div class="table-cell">2026-08-05</div>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="grid lg:grid-cols-[0.9fr_1.1fr] gap-6">
+        <article class="import-shell reveal-up">
+          <div class="eyebrow mb-5">批量导入 Demo Batch Import</div>
+          <div class="import-toolbar">
+            <div class="import-chip"><strong class="text-text-primary block mb-1">导入文件</strong>legacy-cost-projects.xlsx</div>
+            <div class="import-chip"><strong class="text-text-primary block mb-1">阶段</strong>Preview</div>
+            <div class="import-chip"><span class="badge indigo">Ready to Confirm</span></div>
+          </div>
+          <div class="import-stat-grid mb-4">
+            <div class="stat-box">
+              <span class="helper-kicker">Total Records</span>
+              <span class="kpi">26</span>
+            </div>
+            <div class="stat-box">
+              <span class="helper-kicker">Valid</span>
+              <span class="kpi">18</span>
+            </div>
+            <div class="stat-box">
+              <span class="helper-kicker">Duplicate</span>
+              <span class="kpi">4</span>
+            </div>
+            <div class="stat-box">
+              <span class="helper-kicker">Need Review</span>
+              <span class="kpi">4</span>
+            </div>
+          </div>
+          <div class="preview-wrap">
+            <div class="preview-header">
+              <div class="table-cell">项目</div>
+              <div class="table-cell">字段映射</div>
+              <div class="table-cell">状态</div>
+              <div class="table-cell">处理建议</div>
+            </div>
+            <div class="preview-row">
+              <div class="table-cell"><strong>Steam Recovery Pilot</strong>Synthetic example</div>
+              <div class="table-cell">Factory / Category / Owner</div>
+              <div class="table-cell"><span class="badge green">Valid</span></div>
+              <div class="table-cell">进入 Batch Save</div>
+            </div>
+            <div class="preview-row">
+              <div class="table-cell"><strong>Motor Retrofit Batch</strong>Synthetic example</div>
+              <div class="table-cell">Missing Status</div>
+              <div class="table-cell"><span class="badge amber">Need Review</span></div>
+              <div class="table-cell">补齐字段后再导入</div>
+            </div>
+            <div class="preview-row">
+              <div class="table-cell"><strong>Packaging Reuse Program</strong>Synthetic example</div>
+              <div class="table-cell">Project Key matched</div>
+              <div class="table-cell"><span class="badge indigo">Duplicate</span></div>
+              <div class="table-cell">合并或排除重复记录</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="section-card p-6 sm:p-7 reveal-up">
+          <div class="eyebrow mb-5">为什么要单独设计 Batch Import</div>
+          <p class="text-text-secondary text-base sm:text-lg leading-8 mt-0 mb-4">
+            这个模块想强调的是：批量导入不是一个“上传文件按钮”，而是一段真正要考虑数据质量、重复记录和人工确认的流程。
+          </p>
+          <ul class="mini-list">
+            <li>先解析 Excel，再做字段映射，而不是直接把列名写进数据库。</li>
+            <li>对异常值、缺失字段和重复记录做提示，避免脏数据直接落库。</li>
+            <li>通过 Preview 让业务人员在保存前看到结果，降低迁移风险。</li>
+            <li>Batch Save 之后进入 MySQL，方便后续查询、隔离和试点验证。</li>
+          </ul>
+        </article>
+      </div>
+      <article class="public-demo-card p-5 sm:p-6 reveal-up mt-6">
+        <div class="public-demo-head mb-5">
+          <div>
+            <div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-2">Public GitHub Demo</div>
+            <h3 class="text-2xl font-semibold m-0">公开 Demo · Synthetic Data</h3>
+          </div>
+          <a href="https://github.com/2184369772-ai/cost-reduction-platform-demo" target="_blank" rel="noopener noreferrer" class="github-demo-link">查看 GitHub Demo ↗</a>
+        </div>
+        <img src="assets/projects/cost-management-demo.png" alt="降本项目管理公开 Demo 导入预览截图">
+        <p class="m-0 mt-4 text-sm text-text-secondary leading-7">公开 Demo 为脱敏重实现版本，使用虚构数据，不包含公司内部资料。截图展示 CSV / Excel 导入预览、字段校验、Deduplication 与人工确认前的处理状态。</p>
+      </article>
+    </section>
+
+    <section id="trial" class="section-anchor max-w-[1240px] mx-auto px-5 lg:px-8 py-10">
+      <div class="reveal-up mb-8">
+        <div class="eyebrow mb-5">试点与验证 Trial &amp; Validation</div>
+        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mb-4">当前重点不是“全面替代 Excel”，而是把核心链路跑通并验证</h2>
+        <p class="text-text-secondary text-base sm:text-lg max-w-3xl leading-8">
+          当前完成度更适合被描述为：可运行 Demo + 试点准备，并通过实际表格和试用流程验证核心数据链路。
+        </p>
+      </div>
+      <div class="grid lg:grid-cols-2 gap-6 mb-6">
+        <article class="trial-card reveal-up">
+          <div class="helper-kicker">Trial Actions</div>
+          <h3 class="text-2xl font-semibold mb-4">试点与验证做了哪些事</h3>
+          <ul class="mini-list">
+            <li>创建试用环境，配置边界清晰的试用账号</li>
+            <li>基于实际表格结构验证 Batch Import 链路</li>
+            <li>检查去重逻辑、异常排除与 Preview 流程</li>
+            <li>检查账号范围与工厂数据隔离是否成立</li>
+            <li>收集试用反馈，继续迭代导入与查询体验</li>
+          </ul>
+        </article>
+        <article class="section-card p-6 sm:p-7 reveal-up">
+          <div class="eyebrow mb-5">当前成果 Current Status</div>
+          <div class="status-grid">
+            <div class="status-card">
+              <strong class="text-text-primary block mb-2 text-[15px]">完成核心数据模型</strong>
+              <p class="m-0 text-sm text-text-secondary leading-7">围绕工厂、项目、分类、状态、导入记录与账号范围建立结构化基础。</p>
+            </div>
+            <div class="status-card">
+              <strong class="text-text-primary block mb-2 text-[15px]">完成导入 / 校验 / 去重流程</strong>
+              <p class="m-0 text-sm text-text-secondary leading-7">Batch Import 不止是上传，而是包含字段映射、异常处理和 Deduplication。</p>
+            </div>
+            <div class="status-card">
+              <strong class="text-text-primary block mb-2 text-[15px]">完成账户与工厂隔离</strong>
+              <p class="m-0 text-sm text-text-secondary leading-7">把 User / Role 与 Factory Scope 一起考虑，避免共享系统变成共享全部数据。</p>
+            </div>
+            <div class="status-card">
+              <strong class="text-text-primary block mb-2 text-[15px]">建立可运行 Demo 与试点准备</strong>
+              <p class="m-0 text-sm text-text-secondary leading-7">当前阶段是 Runnable Demo / Trial，而不是宣称已完全替代历史 Excel。</p>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-6">
+        <article id="reflection" class="section-card p-6 sm:p-7 reveal-up">
+          <div class="eyebrow mb-5">项目复盘 Reflection</div>
+          <p class="text-text-secondary text-base sm:text-lg leading-8 mt-0 mb-4">
+            这个项目让我更明确地意识到，企业数字化最难的通常不是把界面做出来，而是旧数据怎么迁、字段怎么统一、异常数据怎么处理、权限怎么设计，以及用户原来的工作方式怎么逐步迁移。
+          </p>
+          <p class="text-text-secondary text-base sm:text-lg leading-8 m-0">
+            系统上线并不意味着旧流程会立刻消失，因此渐进迁移本身也是产品设计的一部分。真正可用的系统，不是第一天就宣称全面替代，而是能把迁移风险和试点节奏控制住。
+          </p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="py-10 border-t border-white/6">
+    <div class="max-w-[1240px] mx-auto px-5 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-text-muted">
+      <span>© 2026 Sudian Xu</span>
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="text-text-muted no-underline hover:text-text-primary transition-colors">Back to Portfolio</a>
+        <a href="manufacturing-agent.html" class="text-text-muted no-underline hover:text-text-primary transition-colors">Manufacturing Agent</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const navbar = document.getElementById('navbar');
+    const mobileMenu = document.getElementById('mobileMenu');
+    function toggleMenu() {
+      mobileMenu.classList.toggle('open');
+      document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+    }
+    window.toggleMenu = toggleMenu;
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 24) {
+        navbar.classList.add('nav-shell');
+        navbar.classList.remove('nav-transparent');
+      } else {
+        navbar.classList.remove('nav-shell');
+        navbar.classList.add('nav-transparent');
+      }
+    }, { passive: true });
+    if (!reduceMotion) {
+      const lenis = new Lenis({
+        duration: 1.1,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true
+      });
+      function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+      requestAnimationFrame(raf);
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener('click', function(event) {
+          const targetId = this.getAttribute('href');
+          if (!targetId || targetId === '#') return;
+          const targetEl = document.querySelector(targetId);
+          if (!targetEl) return;
+          event.preventDefault();
+          mobileMenu.classList.remove('open');
+          document.body.style.overflow = '';
+          lenis.scrollTo(targetEl, { offset: -72, duration: 1.05 });
+        });
+      });
+      gsap.registerPlugin(ScrollTrigger);
+      lenis.on('scroll', ScrollTrigger.update);
+      gsap.ticker.add((time) => lenis.raf(time * 1000));
+      gsap.ticker.lagSmoothing(0);
+      gsap.utils.toArray('.reveal-up').forEach((el, index) => {
+        const baseConfig = { y: 18, duration: 0.45, ease: 'power1.out', clearProps: 'transform,opacity' };
+        if (index < 2) {
+          gsap.from(el, { ...baseConfig, opacity: 0, delay: 0.08 * index });
+          return;
+        }
+        gsap.from(el, {
+          ...baseConfig,
+          opacity: 0.16,
+          immediateRender: false,
+          scrollTrigger: { trigger: el, start: 'top 90%', toggleActions: 'play none none none' }
+        });
+      });
+    } else {
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener('click', function() {
+          mobileMenu.classList.remove('open');
+          document.body.style.overflow = '';
+        });
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IT/OT 资产管理系统 | Sudian Xu</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: { primary: '#0a0a0f', secondary: '#111118', card: '#171723', elevated: '#1f2230' },
+            text: { primary: '#f4f7fb', secondary: '#a2abc0', muted: '#6a7387' },
+            accent: { primary: '#6366f1', glow: '#818cf8', cyan: '#22d3ee', green: '#34d399', amber: '#f59e0b' }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans SC', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: auto; }
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+      color: #f4f7fb;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at top right, rgba(99,102,241,0.18), transparent 26%),
+        radial-gradient(circle at 18% 0%, rgba(34,211,238,0.11), transparent 20%),
+        linear-gradient(180deg, #090a0f 0%, #0d1017 36%, #0a0a0f 100%);
+      -webkit-font-smoothing: antialiased;
+    }
+    .grid-overlay {
+      position: fixed; inset: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(circle at center, black 36%, transparent 92%);
+      -webkit-mask-image: radial-gradient(circle at center, black 36%, transparent 92%);
+    }
+    .nav-shell {
+      backdrop-filter: blur(18px) saturate(180%);
+      -webkit-backdrop-filter: blur(18px) saturate(180%);
+      background: rgba(10,10,15,0.72);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-transparent { background: transparent; border-bottom-color: transparent; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 8px 14px; border-radius: 999px;
+      border: 1px solid rgba(129,140,248,0.24);
+      background: rgba(99,102,241,0.08); color: #c7d2fe;
+      font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .eyebrow::before {
+      content: ''; width: 7px; height: 7px; border-radius: 999px;
+      background: linear-gradient(135deg, #22d3ee, #818cf8);
+      box-shadow: 0 0 16px rgba(34,211,238,0.48);
+    }
+    .panel, .metric-card, .section-card, .model-card, .demo-card, .flow-step {
+      position: relative; border-radius: 28px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(22,24,33,0.92), rgba(16,18,27,0.78));
+      box-shadow: 0 24px 60px -32px rgba(0,0,0,0.8);
+    }
+    .panel::before, .metric-card::before, .section-card::before, .model-card::before, .demo-card::before, .flow-step::before {
+      content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.14), transparent 36%, rgba(99,102,241,0.18));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+    }
+    .tag-chip, .status-pill {
+      display: inline-flex; align-items: center; border-radius: 999px;
+      font-size: 12px; line-height: 1; font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); color: #d4dded;
+    }
+    .tag-chip { padding: 8px 12px; }
+    .helper-kicker {
+      font-size: 11px;
+      color: #7d879c;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 10px;
+    }
+    .status-pill {
+      padding: 9px 13px;
+      color: #c7d2fe;
+      background: rgba(99,102,241,0.12);
+      border-color: rgba(129,140,248,0.22);
+    }
+    .nav-link { color: #a2abc0; text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.25s ease; }
+    .nav-link:hover { color: #f4f7fb; }
+    .mobile-menu {
+      position: fixed; inset: 0; z-index: 45; background: rgba(9,10,15,0.94);
+      backdrop-filter: blur(18px); transform: translateY(-100%); transition: transform 0.35s ease;
+      display: flex; flex-direction: column; justify-content: center; gap: 22px; padding: 32px;
+    }
+    .mobile-menu.open { transform: translateY(0); }
+    .hamburger {
+      width: 44px; height: 44px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03); color: #f4f7fb; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .focus-ring:focus-visible, a:focus-visible, button:focus-visible { outline: 2px solid rgba(34,211,238,0.92); outline-offset: 3px; }
+    .section-anchor { scroll-margin-top: 96px; }
+    .transform-stack, .qr-flow {
+      display: grid; gap: 14px;
+    }
+    .capability-grid,
+    .status-grid,
+    .demo-stat-grid {
+      display: grid;
+      gap: 14px;
+    }
+    .capability-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .demo-stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .flow-step { padding: 18px 16px; min-height: 126px; }
+    .down-arrow {
+      display: flex; align-items: center; justify-content: center; color: #818cf8; font-size: 26px;
+    }
+    .demo-frame {
+      border-radius: 22px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); overflow: hidden;
+    }
+    .capability-card,
+    .status-card,
+    .tech-card {
+      position: relative;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      overflow: hidden;
+      padding: 18px;
+    }
+    .capability-card::before,
+    .status-card::before,
+    .tech-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent 45%, rgba(99,102,241,0.14));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+    .demo-toolbar {
+      display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); color: #a2abc0; font-size: 13px;
+    }
+    .table-row,
+    .table-head {
+      display: grid; grid-template-columns: 1.1fr 0.9fr 0.8fr 0.8fr 0.9fr 0.8fr; gap: 10px;
+      padding: 12px 16px; font-size: 14px; color: #d4dded; border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .table-head {
+      color: #8f99ad;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 11px;
+      background: rgba(99,102,241,0.08);
+      border-bottom-color: rgba(129,140,248,0.16);
+    }
+    .asset-pill {
+      display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; font-size: 12px; line-height: 1;
+      background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.18); color: #9be8f5;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: #dce4f2;
+    }
+    .badge.green {
+      background: rgba(52,211,153,0.08);
+      border-color: rgba(52,211,153,0.16);
+      color: #cbfae7;
+    }
+    .badge.indigo {
+      background: rgba(99,102,241,0.1);
+      border-color: rgba(129,140,248,0.16);
+      color: #d7dcff;
+    }
+    .badge.amber {
+      background: rgba(245,158,11,0.08);
+      border-color: rgba(245,158,11,0.16);
+      color: #ffe3b3;
+    }
+    .model-hub {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+    .model-branches {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .model-node {
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      padding: 16px;
+      text-align: center;
+      color: #d4dded;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .scan-flow {
+      display: grid;
+      grid-template-columns: repeat(9, minmax(0, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #818cf8;
+      font-size: 20px;
+    }
+    .stat-box {
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.035);
+      padding: 16px;
+    }
+    .stat-box .kpi {
+      display: block;
+      margin-top: 8px;
+      font-size: 22px;
+      font-weight: 800;
+      color: #f4f7fb;
+    }
+    .detail-list {
+      padding: 16px;
+      color: #d4dded;
+      font-size: 14px;
+      line-height: 1.85;
+      display: grid;
+      gap: 10px;
+    }
+    .inventory-log {
+      display: grid;
+      gap: 10px;
+      padding: 16px;
+    }
+    .inventory-item {
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.035);
+      padding: 12px;
+      color: #d4dded;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .public-demo-card {
+      position: relative;
+      border-radius: 28px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(22,24,33,0.92), rgba(16,18,27,0.78));
+      box-shadow: 0 24px 60px -32px rgba(0,0,0,0.8);
+    }
+    .public-demo-card img {
+      width: 100%;
+      display: block;
+      border-radius: 22px;
+      object-fit: cover;
+    }
+    .public-demo-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .github-demo-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 18px;
+      border-radius: 14px;
+      border: 1px solid rgba(129,140,248,0.24);
+      background: rgba(99,102,241,0.12);
+      color: #eef2ff;
+      text-decoration: none;
+      font-weight: 600;
+      transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+    }
+    .github-demo-link:hover {
+      transform: translateY(-2px);
+      background: rgba(99,102,241,0.18);
+      border-color: rgba(129,140,248,0.34);
+    }
+    @media (max-width: 768px) {
+      .table-row,
+      .table-head,
+      .capability-grid,
+      .status-grid,
+      .demo-stat-grid,
+      .model-hub,
+      .model-branches {
+        grid-template-columns: 1fr;
+      }
+      .scan-flow { grid-template-columns: 1fr; }
+      .flow-arrow { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+      html { scroll-behavior: smooth; }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-overlay"></div>
+
+  <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-500 nav-transparent">
+    <div class="max-w-[1240px] mx-auto px-5 lg:px-8">
+      <div class="min-h-[72px] flex items-center justify-between">
+        <a href="index.html" class="focus-ring inline-flex items-center gap-3 no-underline text-text-primary">
+          <span class="w-10 h-10 rounded-2xl border border-accent-cyan/30 bg-gradient-to-br from-accent-cyan/20 via-accent-primary/18 to-white/5 flex items-center justify-center ring-1 ring-white/10">
+            <span class="font-mono text-lg font-bold tracking-normal text-accent-cyan">S</span>
+          </span>
+          <span class="flex flex-col">
+            <span class="text-sm font-semibold tracking-wide">Sudian Xu</span>
+            <span class="text-[11px] text-text-muted">Case Study</span>
+          </span>
+        </a>
+
+        <div class="hidden md:flex items-center gap-8">
+          <a href="index.html" class="nav-link">← Portfolio</a>
+          <a href="#transformation" class="nav-link">转化路径</a>
+          <a href="#model" class="nav-link">资产结构</a>
+          <a href="#demo" class="nav-link">系统演示</a>
+          <a href="#reflection" class="nav-link">复盘</a>
+        </div>
+
+        <button class="hamburger md:hidden focus-ring" type="button" aria-label="Open menu" onclick="toggleMenu()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div id="mobileMenu" class="mobile-menu md:hidden">
+    <a href="index.html" class="text-3xl font-semibold text-text-primary no-underline" onclick="toggleMenu()">← Portfolio</a>
+    <a href="#transformation" class="text-3xl font-semibold text-text-primary no-underline" onclick="toggleMenu()">转化路径</a>
+    <a href="#model" class="text-3xl font-semibold text-text-primary no-underline" onclick="toggleMenu()">资产结构</a>
+    <a href="#demo" class="text-3xl font-semibold text-text-primary no-underline" onclick="toggleMenu()">系统演示</a>
+    <a href="#reflection" class="text-3xl font-semibold text-accent-cyan no-underline" onclick="toggleMenu()">复盘</a>
+  </div>
+
+  <main class="relative pt-32 pb-14 sm:pt-36 lg:pt-40 lg:pb-20">
+    <section class="max-w-[1240px] mx-auto px-5 lg:px-8 mb-16">
+      <div class="grid lg:grid-cols-[1.03fr_0.97fr] gap-8 items-center">
+        <div class="reveal-up">
+          <div class="eyebrow mb-6">企业项目 · 脱敏案例 Enterprise Project · Anonymized Case Study</div>
+          <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.04] mb-5">
+            IT/OT 资产管理系统
+            <span class="block text-[0.4em] leading-[1.25] mt-4 text-text-secondary font-medium">IT/OT Asset Management System</span>
+          </h1>
+          <p class="text-lg sm:text-xl text-text-secondary leading-8 max-w-3xl mb-8">
+            将纸质资产卡和 Excel 台账转化为支持资产查询、状态维护、扫码盘点、导入导出的内部管理系统。
+          </p>
+          <div class="flex flex-wrap gap-3 mb-8">
+            <span class="tag-chip">Industrial Digitalization</span>
+            <span class="tag-chip">FastAPI</span>
+            <span class="tag-chip">SQLite</span>
+            <span class="tag-chip">QR Code</span>
+            <span class="tag-chip">Asset Lifecycle</span>
+          </div>
+          <div class="panel p-5 sm:p-6 max-w-3xl">
+            <p class="m-0 text-sm sm:text-[15px] text-text-secondary leading-7">
+              页面中的界面、流程和资产数据均为重新绘制或 synthetic 示例。
+              不包含真实公司名称、内部截图、真实账号、内部 URL 或真实资产记录。
+            </p>
+          </div>
+        </div>
+
+        <div class="panel p-6 sm:p-7 reveal-up">
+          <div class="grid sm:grid-cols-2 gap-4 mb-4">
+            <div class="metric-card p-5">
+              <div class="helper-kicker">Core Transformation</div>
+              <div class="text-2xl font-semibold">Paper / Excel</div>
+              <div class="down-arrow">↓</div>
+              <div class="text-2xl font-semibold">Runnable System</div>
+            </div>
+            <div class="metric-card p-5">
+              <div class="helper-kicker">Primary Proof</div>
+              <div class="text-2xl font-semibold leading-tight">资产查询、扫码盘点、状态维护进入同一条系统流程</div>
+            </div>
+          </div>
+          <div class="section-card p-5">
+            <div class="helper-kicker">Project Framing</div>
+            <div class="grid gap-3 text-[15px] leading-7 text-text-secondary">
+              <div><strong class="text-text-primary font-semibold">项目定位：</strong>把纸质资产卡与 Excel 台账转化为可运行内部系统</div>
+              <div><strong class="text-text-primary font-semibold">核心价值：</strong>让资产、状态、位置、盘点与人员操作进入一致流程</div>
+              <div><strong class="text-text-primary font-semibold">一期重点：</strong>Search、QR Scan、Inventory、Status Update、Import / Export</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-[1240px] mx-auto px-5 lg:px-8 py-8 lg:py-10">
+      <div class="grid lg:grid-cols-[0.92fr_1.08fr] gap-6">
+        <article class="section-card p-6 sm:p-7 reveal-up">
+          <div class="eyebrow mb-5">项目背景 Project Background</div>
+          <p class="text-text-secondary text-base sm:text-lg leading-8 mt-0 mb-4">
+            原来的资产管理主要依赖纸质资产卡和 Excel 台账，查询不方便，状态更新分散，盘点过程麻烦，生命周期也难以持续追踪。
+          </p>
+          <p class="text-text-secondary text-base sm:text-lg leading-8 m-0">
+            这个项目的重点不是做几个页面，而是把线下记录、资产状态和盘点动作整理成一个可维护、可查询、可留痕的小型系统流程。
+          </p>
+        </article>
+        <article id="transformation" class="section-card p-6 sm:p-7 reveal-up">
+          <div class="eyebrow mb-5">转化路径 Transformation</div>
+          <div class="transform-stack">
+            <div class="flow-step">
+              <div class="text-sm text-accent-cyan font-medium mb-3">Input</div>
+              <div class="text-xl font-semibold mb-3">Paper / Excel</div>
+              <p class="m-0 text-text-secondary text-[15px] leading-7">纸质资产卡和 Excel 台账里分散保存着主数据、状态更新与盘点记录。</p>
+            </div>
+            <div class="down-arrow">↓</div>
+            <div class="flow-step">
+              <div class="text-sm text-accent-cyan font-medium mb-3">Structure</div>
+              <div class="text-xl font-semibold mb-3">Structured Asset Data</div>
+              <p class="m-0 text-text-secondary text-[15px] leading-7">把资产编号、分类、状态、位置、负责人和记录历史整理成统一数据结构。</p>
+            </div>
+            <div class="down-arrow">↓</div>
+            <div class="flow-step">
+              <div class="text-sm text-accent-cyan font-medium mb-3">Usage</div>
+              <div class="text-xl font-semibold mb-3">Search · QR Scan · Inventory · Status Update · Import / Export</div>
+              <p class="m-0 text-text-secondary text-[15px] leading-7">最终形成的不是静态归档，而是一个可运行的内部资产管理系统。</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="model" class="section-anchor max-w-[1240px] mx-auto px-5 lg:px-8 py-10">
+      <div class="reveal-up mb-8">
+        <div class="eyebrow mb-5">资产结构 Asset Model</div>
+        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mb-4">资产系统真正重要的，是把现实中的资产关系重新组织清楚</h2>
+        <p class="text-text-secondary text-base sm:text-lg max-w-3xl leading-8">
+          这个页面想证明的不是“做了几个管理页”，而是我把资产、状态、位置、负责人、盘点和生命周期整理成了一套更一致的数据结构。
+        </p>
+      </div>
+      <div class="section-card p-6 sm:p-7 reveal-up">
+        <div class="model-hub">
+          <div class="model-node">
+            <strong class="text-text-primary block mb-2">Asset</strong>
+            资产编号 / 资产名称 / 型号
+          </div>
+          <div class="text-center text-accent-glow text-2xl">→</div>
+          <div class="model-node">
+            <strong class="text-text-primary block mb-2">Asset Core</strong>
+            主数据成为统一入口，而不是散落在线下卡片和 Excel 中。
+          </div>
+        </div>
+        <div class="model-branches">
+          <div class="model-node">分类<br>Category</div>
+          <div class="model-node">状态<br>Status</div>
+          <div class="model-node">位置<br>Location</div>
+          <div class="model-node">负责人<br>Owner</div>
+          <div class="model-node">盘点记录<br>Inventory Record</div>
+          <div class="model-node">维护记录<br>Maintenance Record</div>
+          <div class="model-node md:col-span-3">生命周期<br>Asset Lifecycle</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-[1240px] mx-auto px-5 lg:px-8 py-10">
+      <div class="grid lg:grid-cols-[1fr_1fr] gap-6">
+        <article class="section-card p-6 sm:p-7 reveal-up">
+          <div class="eyebrow mb-5">扫码流程 QR Scan Flow</div>
+          <div class="scan-flow">
+            <div class="flow-step">
+              <div class="text-sm text-accent-cyan font-medium mb-3">01</div>
+              <div class="text-xl font-semibold mb-3">扫码</div>
+              <p class="m-0 text-text-secondary text-[15px] leading-7">以资产上的 QR Code 作为最快速的查询入口。</p>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+              <div class="text-sm text-accent-cyan font-medium mb-3">02</div>
+              <div class="text-xl font-semibold mb-3">查询资产</div>
+              <p class="m-0 text-text-secondary text-[15px] leading-7">读取资产基础信息、当前位置、负责人和当前状态。</p>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+              <div class="text-sm text-accent-cyan font-medium mb-3">03</div>
+              <div class="text-xl font-semibold mb-3">查看状态</div>
+              <p class="m-0 text-text-secondary text-[15px] leading-7">先确认资产是否在用、待盘点、维修中或已归档。</p>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+              <div class="text-sm text-accent-cyan font-medium mb-3">04</div>
+              <div class="text-xl font-semibold mb-3">盘点 / 更新</div>
+              <p class="m-0 text-text-secondary text-[15px] leading-7">执行盘点确认或状态更新，不再依赖纸质回写。</p>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step">
+              <div class="text-sm text-accent-cyan font-medium mb-3">05</div>
+              <div class="text-xl font-semibold mb-3">留痕</div>
+              <p class="m-0 text-text-secondary text-[15px] leading-7">保存操作时间、结果和执行人，方便后续追踪。</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="section-card p-6 sm:p-7 reveal-up">
+          <div class="eyebrow mb-5">系统能力 System Capabilities</div>
+          <div class="capability-grid">
+            <div class="capability-card"><strong class="text-text-primary block mb-2">资产主数据</strong><span class="text-sm text-text-secondary leading-7">统一管理资产编号、名称和基础属性。</span></div>
+            <div class="capability-card"><strong class="text-text-primary block mb-2">分类管理</strong><span class="text-sm text-text-secondary leading-7">让资产类型与字段口径更清晰。</span></div>
+            <div class="capability-card"><strong class="text-text-primary block mb-2">状态管理</strong><span class="text-sm text-text-secondary leading-7">在用、待盘点、维修中、已归档等状态可维护。</span></div>
+            <div class="capability-card"><strong class="text-text-primary block mb-2">资产查询</strong><span class="text-sm text-text-secondary leading-7">支持按编号、名称、位置和负责人检索。</span></div>
+            <div class="capability-card"><strong class="text-text-primary block mb-2">QR 扫码</strong><span class="text-sm text-text-secondary leading-7">把扫码作为现场查询与盘点入口。</span></div>
+            <div class="capability-card"><strong class="text-text-primary block mb-2">盘点</strong><span class="text-sm text-text-secondary leading-7">支持盘点确认、差异记录与留痕。</span></div>
+            <div class="capability-card"><strong class="text-text-primary block mb-2">Excel 导入</strong><span class="text-sm text-text-secondary leading-7">支持历史台账进入结构化系统。</span></div>
+            <div class="capability-card"><strong class="text-text-primary block mb-2">Excel 导出</strong><span class="text-sm text-text-secondary leading-7">方便内部复核、流转和继续处理。</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="max-w-[1240px] mx-auto px-5 lg:px-8 py-10">
+      <div class="grid lg:grid-cols-[0.92fr_1.08fr] gap-6">
+        <article class="tech-card reveal-up">
+          <div class="eyebrow mb-5">技术取舍 Technical Decisions</div>
+          <p class="text-text-secondary text-base sm:text-lg leading-8 mt-0 mb-4">
+            一期优先快速落地和验证，所以采用了更轻量的组合：FastAPI、SQLite 和 Web UI。重点不是炫技术，而是先把资产主数据、查询、扫码盘点和导入导出这些核心流程跑通。
+          </p>
+          <p class="text-text-secondary text-base sm:text-lg leading-8 m-0">
+            同时，数据结构也预留了后续扩展空间，比如多人使用、集中部署，以及在需要时迁移到 MySQL 等数据库，而不是把一期方案锁死成一次性原型。
+          </p>
+        </article>
+
+        <article id="demo" class="section-card p-6 sm:p-7 reveal-up">
+          <div class="eyebrow mb-5">系统演示 Demo UI</div>
+          <div class="demo-stat-grid mb-4">
+            <div class="stat-box">
+              <span class="helper-kicker">Assets Tracked</span>
+              <span class="kpi">128</span>
+            </div>
+            <div class="stat-box">
+              <span class="helper-kicker">Inventory Due</span>
+              <span class="kpi">14</span>
+            </div>
+            <div class="stat-box">
+              <span class="helper-kicker">QR Ready</span>
+              <span class="kpi">92%</span>
+            </div>
+          </div>
+          <div class="grid xl:grid-cols-3 gap-4">
+            <div class="demo-frame">
+              <div class="demo-toolbar"><span>Asset List</span><span class="asset-pill">Synthetic</span></div>
+              <div class="table-head"><span>资产编号</span><span>资产名称</span><span>分类</span><span>位置</span><span>状态</span><span>负责人</span></div>
+              <div class="table-row"><span>OT-24017</span><strong>Booth Sensor Unit</strong><span>OT Device</span><span>产线 A</span><span><span class="badge green">在用</span></span><span>Shift B</span></div>
+              <div class="table-row"><span>IT-11802</span><strong>Industrial Tablet</strong><span>IT Device</span><span>库房</span><span><span class="badge amber">待盘点</span></span><span>Warehouse</span></div>
+              <div class="table-row"><span>OT-30951</span><strong>PLC Adapter</strong><span>OT Accessory</span><span>维修间</span><span><span class="badge indigo">维修中</span></span><span>M. Sun</span></div>
+            </div>
+            <div class="demo-frame">
+              <div class="demo-toolbar"><span>Asset Detail</span><span class="asset-pill">Recreated</span></div>
+              <div class="detail-list">
+                <div><strong>基础信息：</strong>OT-24017 / Booth Sensor Unit / OT Device</div>
+                <div><strong>当前状态：</strong><span class="badge green">在用</span></div>
+                <div><strong>位置：</strong>喷涂区域 2</div>
+                <div><strong>负责人：</strong>Shift Team B</div>
+                <div><strong>盘点记录：</strong>2026-08-06 已确认，状态一致</div>
+                <div><strong>维护记录：</strong>2026-07-28 完成接口检查</div>
+                <div><strong>生命周期：</strong>在用阶段，可继续跟踪后续维修与归档</div>
+              </div>
+            </div>
+            <div class="demo-frame">
+              <div class="demo-toolbar"><span>QR Scan / Inventory</span><span class="asset-pill">Synthetic</span></div>
+              <div class="inventory-log">
+                <div class="inventory-item"><strong>扫码结果：</strong>OT-24017</div>
+                <div class="inventory-item"><strong>系统状态：</strong>在用 / Paint Area 2 / Shift Team B</div>
+                <div class="inventory-item"><strong>盘点动作：</strong>确认存在，位置一致，状态无需变更</div>
+                <div class="inventory-item"><strong>留痕：</strong>2026-08-14 由 Internal Tester 提交盘点记录</div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+      <article class="public-demo-card p-5 sm:p-6 reveal-up mt-6">
+        <div class="public-demo-head mb-5">
+          <div>
+            <div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-2">Public GitHub Demo</div>
+            <h3 class="text-2xl font-semibold m-0">公开 Demo · Synthetic Data</h3>
+          </div>
+          <a href="https://github.com/2184369772-ai/itot-asset-management-demo" target="_blank" rel="noopener noreferrer" class="github-demo-link">查看 GitHub Demo ↗</a>
+        </div>
+        <img src="assets/projects/itot-assets-demo.png" alt="ITOT 资产管理公开 Demo 资产详情与 QR Code 截图">
+        <p class="m-0 mt-4 text-sm text-text-secondary leading-7">公开 Demo 为脱敏重实现版本，使用虚构数据，不包含公司内部资料。截图展示 Asset Detail、QR Code、资产状态和盘点入口如何把纸质 / Excel 台账变成可运行系统。</p>
+      </article>
+    </section>
+
+    <section class="max-w-[1240px] mx-auto px-5 lg:px-8 py-10">
+      <div class="grid lg:grid-cols-[1fr_1fr] gap-6">
+        <article class="section-card p-6 sm:p-7 reveal-up">
+          <div class="eyebrow mb-5">当前成果 Current Status</div>
+          <div class="status-grid">
+            <div class="status-card"><strong class="text-text-primary block mb-2 text-[15px]">完成资产主数据管理</strong><span class="text-sm text-text-secondary leading-7">把基础资产信息从纸质 / Excel 记录迁入系统结构。</span></div>
+            <div class="status-card"><strong class="text-text-primary block mb-2 text-[15px]">完成分类 / 状态维护</strong><span class="text-sm text-text-secondary leading-7">支持分类字段、状态切换与基础信息维护。</span></div>
+            <div class="status-card"><strong class="text-text-primary block mb-2 text-[15px]">完成 QR 使用流程</strong><span class="text-sm text-text-secondary leading-7">可通过扫码进入资产查询与盘点更新链路。</span></div>
+            <div class="status-card"><strong class="text-text-primary block mb-2 text-[15px]">完成 Excel 导入导出</strong><span class="text-sm text-text-secondary leading-7">支持历史台账导入与结果导出，方便过渡阶段使用。</span></div>
+            <div class="status-card lg:col-span-2"><strong class="text-text-primary block mb-2 text-[15px]">建立可运行内部 Web Demo</strong><span class="text-sm text-text-secondary leading-7">当前完成度可以被描述为一个可运行的内部管理 Demo，而不是停留在静态展示页。</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="reflection" class="section-anchor max-w-[1240px] mx-auto px-5 lg:px-8 py-10">
+      <div class="section-card p-6 sm:p-7 reveal-up">
+        <div class="eyebrow mb-5">项目复盘 Reflection</div>
+        <p class="text-text-secondary text-base sm:text-lg leading-8 mt-0 mb-4">
+          内部数字化系统的价值，不只是把 Excel 做成网页。真正重要的是，把现实中的资产、状态、盘点和人员操作，变成一套一致、可维护的系统流程。
+        </p>
+        <p class="text-text-secondary text-base sm:text-lg leading-8 m-0">
+          这个项目也说明，哪怕是一期较轻量的方案，只要它能让查询、状态维护、扫码盘点和后续生命周期扩展更清晰，就已经比原来的纸质卡片和 Excel 流程前进了一步。
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="py-10 border-t border-white/6">
+    <div class="max-w-[1240px] mx-auto px-5 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-text-muted">
+      <span>© 2026 Sudian Xu</span>
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="text-text-muted no-underline hover:text-text-primary transition-colors">Back to Portfolio</a>
+        <a href="cost-management.html" class="text-text-muted no-underline hover:text-text-primary transition-colors">Cost Management</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const navbar = document.getElementById('navbar');
+    const mobileMenu = document.getElementById('mobileMenu');
+    function toggleMenu() {
+      mobileMenu.classList.toggle('open');
+      document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+    }
+    window.toggleMenu = toggleMenu;
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 24) {
+        navbar.classList.add('nav-shell');
+        navbar.classList.remove('nav-transparent');
+      } else {
+        navbar.classList.remove('nav-shell');
+        navbar.classList.add('nav-transparent');
+      }
+    }, { passive: true });
+    if (!reduceMotion) {
+      const lenis = new Lenis({
+        duration: 1.1,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true
+      });
+      function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+      requestAnimationFrame(raf);
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener('click', function(event) {
+          const targetId = this.getAttribute('href');
+          if (!targetId || targetId === '#') return;
+          const targetEl = document.querySelector(targetId);
+          if (!targetEl) return;
+          event.preventDefault();
+          mobileMenu.classList.remove('open');
+          document.body.style.overflow = '';
+          lenis.scrollTo(targetEl, { offset: -72, duration: 1.05 });
+        });
+      });
+      gsap.registerPlugin(ScrollTrigger);
+      lenis.on('scroll', ScrollTrigger.update);
+      gsap.ticker.add((time) => lenis.raf(time * 1000));
+      gsap.ticker.lagSmoothing(0);
+      gsap.utils.toArray('.reveal-up').forEach((el, index) => {
+        const baseConfig = { y: 18, duration: 0.45, ease: 'power1.out', clearProps: 'transform,opacity' };
+        if (index < 2) {
+          gsap.from(el, { ...baseConfig, opacity: 0, delay: 0.08 * index });
+          return;
+        }
+        gsap.from(el, {
+          ...baseConfig,
+          opacity: 0.16,
+          immediateRender: false,
+          scrollTrigger: { trigger: el, start: 'top 90%', toggleActions: 'play none none none' }
+        });
+      });
+    } else {
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener('click', function() {
+          mobileMenu.classList.remove('open');
+          document.body.style.overflow = '';
+        });
+      });
+    }
+  </script>
+</body>
+</html>

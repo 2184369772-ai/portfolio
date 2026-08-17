@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>制造现场问题助手 Agent | Sudian Xu</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: { primary: '#0a0a0f', secondary: '#111118', card: '#171723', elevated: '#1f2230' },
+            text: { primary: '#f4f7fb', secondary: '#a2abc0', muted: '#6a7387' },
+            accent: { primary: '#6366f1', glow: '#818cf8', cyan: '#22d3ee', green: '#34d399', amber: '#f59e0b', rose: '#fb7185' }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans SC', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: auto; }
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+      color: #f4f7fb;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at top right, rgba(99,102,241,0.18), transparent 24%),
+        radial-gradient(circle at top left, rgba(34,211,238,0.12), transparent 20%),
+        linear-gradient(180deg, #090a0f 0%, #0d1017 38%, #0a0a0f 100%);
+      -webkit-font-smoothing: antialiased;
+    }
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(circle at center, black 36%, transparent 92%);
+      -webkit-mask-image: radial-gradient(circle at center, black 36%, transparent 92%);
+    }
+    .nav-shell {
+      backdrop-filter: blur(18px) saturate(180%);
+      -webkit-backdrop-filter: blur(18px) saturate(180%);
+      background: rgba(10,10,15,0.72);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-transparent {
+      background: transparent;
+      border-bottom-color: transparent;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(129,140,248,0.24);
+      background: rgba(99,102,241,0.08);
+      color: #c7d2fe;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #22d3ee, #818cf8);
+      box-shadow: 0 0 16px rgba(34,211,238,0.48);
+    }
+    .panel, .metric-card, .section-card, .ui-card, .flow-step {
+      position: relative;
+      border-radius: 28px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(22,24,33,0.92), rgba(16,18,27,0.78));
+      overflow: hidden;
+      box-shadow: 0 24px 60px -32px rgba(0,0,0,0.8);
+    }
+    .panel::before, .metric-card::before, .section-card::before, .ui-card::before, .flow-step::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.14), transparent 36%, rgba(99,102,241,0.18));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+    .tag-chip, .status-pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      font-size: 12px;
+      line-height: 1;
+      font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: #d4dded;
+    }
+    .tag-chip { padding: 8px 12px; }
+    .helper-kicker {
+      font-size: 11px;
+      color: #7d879c;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 10px;
+    }
+    .status-pill {
+      padding: 9px 13px;
+      color: #c7d2fe;
+      background: rgba(99,102,241,0.12);
+      border-color: rgba(129,140,248,0.22);
+    }
+    .focus-ring:focus-visible, a:focus-visible, button:focus-visible {
+      outline: 2px solid rgba(34,211,238,0.92);
+      outline-offset: 3px;
+    }
+    .nav-link {
+      color: #a2abc0;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.25s ease;
+    }
+    .nav-link:hover { color: #f4f7fb; }
+    .mobile-menu {
+      position: fixed;
+      inset: 0;
+      z-index: 45;
+      background: rgba(9,10,15,0.94);
+      backdrop-filter: blur(18px);
+      transform: translateY(-100%);
+      transition: transform 0.35s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 22px;
+      padding: 32px;
+    }
+    .mobile-menu.open { transform: translateY(0); }
+    .hamburger {
+      width: 44px; height: 44px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      color: #f4f7fb;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .workflow-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 14px;
+      align-items: stretch;
+    }
+    .flow-step {
+      padding: 22px 18px;
+      min-height: 156px;
+    }
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #818cf8;
+      font-size: 22px;
+      opacity: 0.85;
+    }
+    .ui-card { padding: 22px; }
+    .chat-bubble {
+      border-radius: 18px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      font-size: 14px;
+      line-height: 1.75;
+    }
+    .chat-user {
+      background: rgba(99,102,241,0.12);
+      border: 1px solid rgba(129,140,248,0.22);
+    }
+    .chat-agent {
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .chat-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      font-size: 12px;
+      color: #8f99ad;
+      letter-spacing: 0.03em;
+    }
+    .chat-role {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #dce4f2;
+    }
+    .chat-role::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(34,211,238,0.9);
+      box-shadow: 0 0 14px rgba(34,211,238,0.35);
+    }
+    .chat-role.agent::before {
+      background: rgba(129,140,248,0.95);
+      box-shadow: 0 0 14px rgba(129,140,248,0.35);
+    }
+    .result-panel {
+      display: grid;
+      gap: 16px;
+    }
+    .result-section {
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      padding: 16px 18px;
+    }
+    .result-label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .result-label strong {
+      font-size: 16px;
+      font-weight: 700;
+      color: #f4f7fb;
+    }
+    .result-label span {
+      font-size: 12px;
+      color: #8f99ad;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .bullet-list {
+      margin: 0;
+      padding-left: 18px;
+      color: #aeb8cb;
+      font-size: 14px;
+      line-height: 1.85;
+    }
+    .bullet-list li + li {
+      margin-top: 6px;
+    }
+    .source-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .source-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 9px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.035);
+      color: #d7e0ee;
+      font-size: 13px;
+      line-height: 1;
+    }
+    .risk-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .risk-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.22);
+      background: rgba(148,163,184,0.09);
+      color: #d9e1ed;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+    .review-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(129,140,248,0.16);
+      background: rgba(99,102,241,0.08);
+      color: #d7dcff;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .review-state::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(129,140,248,0.95);
+      box-shadow: 0 0 14px rgba(129,140,248,0.32);
+    }
+    .public-demo-card {
+      position: relative;
+      border-radius: 28px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(22,24,33,0.92), rgba(16,18,27,0.78));
+      box-shadow: 0 24px 60px -32px rgba(0,0,0,0.8);
+    }
+    .public-demo-card img {
+      width: 100%;
+      display: block;
+      border-radius: 22px;
+      object-fit: cover;
+    }
+    .public-demo-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .github-demo-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 18px;
+      border-radius: 14px;
+      border: 1px solid rgba(129,140,248,0.24);
+      background: rgba(99,102,241,0.12);
+      color: #eef2ff;
+      text-decoration: none;
+      font-weight: 600;
+      transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+    }
+    .github-demo-link:hover {
+      transform: translateY(-2px);
+      background: rgba(99,102,241,0.18);
+      border-color: rgba(129,140,248,0.34);
+    }
+    .eval-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .eval-card {
+      position: relative;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      padding: 18px 18px 20px;
+      overflow: hidden;
+    }
+    .eval-card:nth-child(1),
+    .eval-card:nth-child(2),
+    .eval-card:nth-child(3) {
+      grid-column: span 2;
+    }
+    .eval-card:nth-child(4),
+    .eval-card:nth-child(5) {
+      grid-column: span 3;
+    }
+    .eval-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent 45%, rgba(99,102,241,0.14));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+    .eval-number {
+      font-size: 12px;
+      color: #8f99ad;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+    .eval-card h3 {
+      margin: 0 0 4px;
+      font-size: 20px;
+      line-height: 1.3;
+    }
+    .eval-helper {
+      font-size: 12px;
+      color: #8f99ad;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+    .eval-check {
+      font-size: 14px;
+      line-height: 1.8;
+      color: #aeb8cb;
+      margin-bottom: 14px;
+    }
+    .outcome-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .outcome-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.035);
+      color: #dce4f2;
+    }
+    .outcome-pill.escalate {
+      border-color: rgba(129,140,248,0.2);
+      background: rgba(99,102,241,0.08);
+      color: #d9deff;
+    }
+    .method-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .method-card {
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      padding: 16px 16px 18px;
+    }
+    .method-card strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 15px;
+      color: #f4f7fb;
+    }
+    .method-card p {
+      margin: 0;
+      color: #aeb8cb;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .status-card {
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      padding: 16px 16px 18px;
+    }
+    .status-card strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 15px;
+      color: #f4f7fb;
+    }
+    .status-card p {
+      margin: 0;
+      color: #aeb8cb;
+      font-size: 14px;
+      line-height: 1.75;
+    }
+    .section-anchor { scroll-margin-top: 96px; }
+    @media (max-width: 1180px) {
+      .eval-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .eval-card:nth-child(n) {
+        grid-column: span 1;
+      }
+    }
+    @media (max-width: 1100px) {
+      .workflow-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .flow-arrow { display: none; }
+    }
+    @media (max-width: 900px) {
+      .method-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .status-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 640px) {
+      .workflow-grid {
+        grid-template-columns: 1fr;
+      }
+      .flow-step { min-height: unset; }
+      .eval-grid,
+      .method-grid,
+      .status-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+      html { scroll-behavior: smooth; }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-overlay"></div>
+
+  <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-500 nav-transparent">
+    <div class="max-w-[1240px] mx-auto px-5 lg:px-8">
+      <div class="min-h-[72px] flex items-center justify-between">
+        <a href="index.html" class="focus-ring inline-flex items-center gap-3 no-underline text-text-primary">
+          <span class="w-10 h-10 rounded-2xl border border-accent-cyan/30 bg-gradient-to-br from-accent-cyan/20 via-accent-primary/18 to-white/5 flex items-center justify-center ring-1 ring-white/10">
+            <span class="font-mono text-lg font-bold tracking-normal text-accent-cyan">S</span>
+          </span>
+          <span class="flex flex-col">
+            <span class="text-sm font-semibold tracking-wide">Sudian Xu</span>
+            <span class="text-[11px] text-text-muted">Case Study</span>
+          </span>
+        </a>
+
+        <div class="hidden md:flex items-center gap-8">
+          <a href="index.html" class="nav-link">← Portfolio</a>
+          <a href="#workflow" class="nav-link">工作流程</a>
+          <a href="#decisions" class="nav-link">设计决策</a>
+          <a href="#demo" class="nav-link">Demo</a>
+          <a href="#evaluation" class="nav-link">评估</a>
+          <a href="#reflection" class="nav-link">复盘</a>
+        </div>
+
+        <button class="hamburger md:hidden focus-ring" type="button" aria-label="Open menu" onclick="toggleMenu()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div id="mobileMenu" class="mobile-menu md:hidden">
+    <a href="index.html" class="text-3xl font-semibold text-text-primary no-underline" onclick="toggleMenu()">← Portfolio</a>
+    <a href="#workflow" class="text-3xl font-semibold text-text-primary no-underline" onclick="toggleMenu()">工作流程</a>
+    <a href="#decisions" class="text-3xl font-semibold text-text-primary no-underline" onclick="toggleMenu()">设计决策</a>
+    <a href="#demo" class="text-3xl font-semibold text-text-primary no-underline" onclick="toggleMenu()">Demo</a>
+    <a href="#evaluation" class="text-3xl font-semibold text-text-primary no-underline" onclick="toggleMenu()">评估</a>
+    <a href="#reflection" class="text-3xl font-semibold text-accent-cyan no-underline" onclick="toggleMenu()">复盘</a>
+  </div>
+
+  <main class="relative pt-32 pb-14 sm:pt-36 lg:pt-40 lg:pb-20">
+    <section class="max-w-[1240px] mx-auto px-5 lg:px-8 mb-16">
+      <div class="grid lg:grid-cols-[1.08fr_0.92fr] gap-8 items-center">
+        <div class="reveal-up">
+          <div class="eyebrow mb-6">Enterprise Project · Anonymized Case Study</div>
+          <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.04] mb-5">
+            制造现场问题助手 Agent
+            <span class="block text-[0.4em] leading-[1.25] mt-4 text-text-secondary font-medium">Manufacturing Troubleshooting Agent</span>
+          </h1>
+          <p class="text-lg sm:text-xl text-text-secondary leading-8 max-w-3xl mb-8">
+            面向制造现场异常处理场景，将问题输入、补充追问、知识检索、规则判断、处理建议、人工升级与案例沉淀串成一个可运行的 Agent 闭环。
+          </p>
+          <div class="flex flex-wrap gap-3 mb-8">
+            <span class="tag-chip">AI Agent</span>
+            <span class="tag-chip">Knowledge Retrieval</span>
+            <span class="tag-chip">Risk Control</span>
+            <span class="tag-chip">Evaluation</span>
+            <span class="tag-chip">Human-in-the-loop</span>
+          </div>
+          <div class="panel p-5 sm:p-6 max-w-3xl">
+            <p class="m-0 text-sm sm:text-[15px] text-text-secondary leading-7">
+              本页面使用脱敏后的流程、重绘界面与 synthetic data 展示项目思路。
+              不包含任何公司内部代码、内部数据或保密资料。
+            </p>
+          </div>
+        </div>
+
+        <div class="panel p-6 sm:p-7 reveal-up">
+          <div class="grid sm:grid-cols-2 gap-4 mb-4">
+            <div class="metric-card p-5">
+              <div class="helper-kicker">核心定位 Core Framing</div>
+              <div class="text-2xl font-semibold">不是一个简单 Chatbot</div>
+            </div>
+            <div class="metric-card p-5">
+              <div class="helper-kicker">核心价值 Primary Value</div>
+              <div class="text-2xl font-semibold">受约束的问题处理闭环</div>
+            </div>
+          </div>
+          <div class="section-card p-5">
+            <div class="helper-kicker">这个案例证明了什么 What This Case Proves</div>
+            <div class="grid gap-3 text-[15px] leading-7 text-text-secondary">
+              <div>现场问题可以被拆解成清晰的 Agent Workflow，而不是只靠模型自由回答。</div>
+              <div>Knowledge Retrieval、规则判断与 Risk Control 需要同时参与，才能约束输出边界。</div>
+              <div>Evaluation、人工升级与结果留痕，本身就是企业 Agent 设计的一部分。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="workflow" class="section-anchor max-w-[1240px] mx-auto px-5 lg:px-8 py-8 lg:py-10">
+      <div class="reveal-up mb-8">
+        <div class="eyebrow mb-5">工作流程 Agent Workflow</div>
+        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mb-4">不是先回答，而是先把问题送进一个可控流程</h2>
+        <p class="text-text-secondary text-base sm:text-lg max-w-3xl leading-8">
+          这个项目的目标不是“尽量什么都回答”，而是把信息不完整的现场问题送进一个可追踪、可复核、可控的处理流程。
+        </p>
+      </div>
+      <div class="workflow-grid">
+        <div class="flow-step reveal-up">
+          <div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-3">01 · Input</div>
+          <div class="text-xl font-semibold mb-3">问题输入</div>
+          <p class="m-0 text-text-secondary text-[15px] leading-7">现场人员先输入问题描述，但这些信息往往不完整，也缺少足够上下文。</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step reveal-up">
+          <div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-3">02 · Clarification</div>
+          <div class="text-xl font-semibold mb-3">信息澄清</div>
+          <p class="m-0 text-text-secondary text-[15px] leading-7">系统先补充追问，而不是在信息不足的情况下直接猜测原因。</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step reveal-up">
+          <div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-3">03 · Knowledge + Rules</div>
+          <div class="text-xl font-semibold mb-3">知识检索 + 规则判断</div>
+          <p class="m-0 text-text-secondary text-[15px] leading-7">Knowledge Retrieval 与规则判断共同参与，决定系统可以输出哪些建议。</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step reveal-up">
+          <div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-3">04 · Recommendation</div>
+          <div class="text-xl font-semibold mb-3">生成处理建议</div>
+          <p class="m-0 text-text-secondary text-[15px] leading-7">系统给出可能原因、建议检查项和下一步处理建议，并标明来源依据。</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step reveal-up">
+          <div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-3">05 · Risk Check</div>
+          <div class="text-xl font-semibold mb-3">风险检查</div>
+          <p class="m-0 text-text-secondary text-[15px] leading-7">对于高风险或低置信度输出，系统需要限制、提示，或阻止直接放行。</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step reveal-up">
+          <div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-3">06 · Human-in-the-loop</div>
+          <div class="text-xl font-semibold mb-3">人工升级</div>
+          <p class="m-0 text-text-secondary text-[15px] leading-7">当信息不足、风险较高或知识覆盖不够时，系统需要升级人工，而不是假装自己有把握。</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step reveal-up">
+          <div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-3">07 · Retention</div>
+          <div class="text-xl font-semibold mb-3">结果 / 案例沉淀</div>
+          <p class="m-0 text-text-secondary text-[15px] leading-7">处理结果与 Bad Case 可以回流到知识审核、测试集和后续迭代中，形成持续改进闭环。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-[1240px] mx-auto px-5 lg:px-8 py-10">
+      <div class="grid lg:grid-cols-[0.92fr_1.08fr] gap-6">
+        <article class="section-card p-6 sm:p-7 reveal-up">
+          <div class="eyebrow mb-5">项目背景 Project Background</div>
+          <p class="text-text-secondary text-base sm:text-lg leading-8 mt-0 mb-4">
+            制造现场的问题描述往往并不完整，经验知识分散在文档、记录和老师傅经验里，而且某些涉及高风险操作的建议并不适合由 AI 无限制直接输出。
+          </p>
+          <p class="text-text-secondary text-base sm:text-lg leading-8 m-0">
+            所以这个项目的目标不是做一个“什么都能答”的机器人，而是设计一套有边界的问题处理流程，让系统能够先澄清、再检索、再判断、再建议，并在需要时升级人工。
+          </p>
+        </article>
+        <article class="section-card p-6 sm:p-7 reveal-up">
+          <div class="eyebrow mb-5">我的职责 My Role</div>
+          <div class="grid sm:grid-cols-2 gap-3 text-[15px] leading-7 text-text-secondary">
+            <div>需求拆解与一期范围设计</div>
+            <div>Agent Workflow 设计</div>
+            <div>知识条目结构设计</div>
+            <div>风险规则与升级边界设计</div>
+            <div>多轮追问逻辑设计</div>
+            <div>Demo 设计与 Bad Case 题集整理</div>
+            <div>Evaluation 思路与测试闭环</div>
+            <div>基于反馈的迭代优化</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="decisions" class="section-anchor max-w-[1240px] mx-auto px-5 lg:px-8 py-10">
+      <div class="reveal-up mb-8">
+        <div class="eyebrow mb-5">核心产品决策 Product Decisions</div>
+        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mb-4">四个关键设计决策，决定这个 Agent 能不能真正落地</h2>
+      </div>
+      <div class="grid lg:grid-cols-2 gap-6">
+        <article class="section-card p-6 sm:p-7 reveal-up">
+          <div class="text-sm text-accent-cyan font-medium mb-3">01 · 多轮澄清</div>
+          <h3 class="text-2xl font-semibold mb-4">先追问，再做判断</h3>
+          <p class="m-0 text-text-secondary text-[15px] leading-8">当现场信息不充分时，系统应该先围绕现象、时点、设备状态和上下文做补充追问，而不是直接给出原因判断。</p>
+          <p class="m-0 mt-3 text-sm text-accent-glow">Ask before assuming</p>
+        </article>
+        <article class="section-card p-6 sm:p-7 reveal-up">
+          <div class="text-sm text-accent-cyan font-medium mb-3">02 · 知识 + 规则</div>
+          <h3 class="text-2xl font-semibold mb-4">检索不是全部</h3>
+          <p class="m-0 text-text-secondary text-[15px] leading-8">Knowledge Retrieval 可以帮助系统找到相关知识，但真正能不能输出建议，还需要结合规则判断、场景边界和风险约束。</p>
+          <p class="m-0 mt-3 text-sm text-accent-glow">Retrieval alone is not enough</p>
+        </article>
+        <article class="section-card p-6 sm:p-7 reveal-up">
+          <div class="text-sm text-accent-cyan font-medium mb-3">03 · 风险控制</div>
+          <h3 class="text-2xl font-semibold mb-4">高风险动作不直接输出</h3>
+          <p class="m-0 text-text-secondary text-[15px] leading-8">对于未经审核的高风险动作，尤其是可能影响设备、工艺或质量的定量调整建议，系统不应像普通低风险建议一样直接输出。</p>
+          <p class="m-0 mt-3 text-sm text-accent-glow">Do not directly emit high-risk actions</p>
+        </article>
+        <article class="section-card p-6 sm:p-7 reveal-up">
+          <div class="text-sm text-accent-cyan font-medium mb-3">04 · 人工升级</div>
+          <h3 class="text-2xl font-semibold mb-4">信息不足或风险较高时升级人工</h3>
+          <p class="m-0 text-text-secondary text-[15px] leading-8">一个真正可用的企业 Agent，必须知道什么时候应该停下来、提示风险，或者在知识不足、风险较高时把问题升级给人工处理。</p>
+          <p class="m-0 mt-3 text-sm text-accent-glow">Human-in-the-loop</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="demo" class="section-anchor max-w-[1240px] mx-auto px-5 lg:px-8 py-10">
+      <div class="reveal-up mb-8">
+        <div class="eyebrow mb-5">演示体验 Demo Experience</div>
+        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mb-4">用重绘界面和虚构案例，展示系统如何实际交互</h2>
+        <p class="text-text-secondary text-base sm:text-lg max-w-3xl leading-8">
+          下面的交互界面用于公开展示，均为重绘后的 Demo UI，数据也为虚构示例，用来说明系统行为与产品逻辑，而不是展示内部系统原界面。
+        </p>
+      </div>
+      <article class="public-demo-card p-5 sm:p-6 reveal-up mb-6">
+        <div class="public-demo-head mb-5">
+          <div>
+            <div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-2">Public GitHub Demo</div>
+            <h3 class="text-2xl font-semibold m-0">公开 Demo · Synthetic Data</h3>
+          </div>
+          <a href="https://github.com/2184369772-ai/manufacturing-troubleshooting-agent" target="_blank" rel="noopener noreferrer" class="github-demo-link">查看 GitHub Demo ↗</a>
+        </div>
+        <img src="assets/projects/agent-demo.png" alt="制造现场问题助手公开 Demo 截图">
+        <p class="m-0 mt-4 text-sm text-text-secondary leading-7">公开 Demo 为脱敏重实现版本，使用虚构数据，不包含公司内部资料。截图展示多轮追问、Knowledge Sources、Risk Level 与 Human Escalation 的真实运行界面。</p>
+      </article>
+      <div class="grid lg:grid-cols-[0.96fr_1.04fr] gap-6">
+        <article class="ui-card reveal-up">
+          <div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-4">Conversation / Problem Input</div>
+          <div class="chat-meta">
+            <span class="chat-role">用户输入</span>
+            <span>已提交 · 09:42</span>
+          </div>
+          <div class="chat-bubble chat-user">产品表面出现异常纹路，最近一批更明显。</div>
+
+          <div class="chat-meta mt-5">
+            <span class="chat-role agent">Agent 追问</span>
+            <span>处理中 · Clarification</span>
+          </div>
+          <div class="chat-bubble chat-agent">
+            为了进一步判断，请补充几个信息：
+            <br>1. 问题从什么时候开始出现？
+            <br>2. 最近是否更换过物料批次？
+            <br>3. 缺陷是持续出现还是间歇出现？
+            <br>4. 是否有人调整过相关设置？
+          </div>
+
+          <div class="chat-meta mt-5">
+            <span class="chat-role">用户补充</span>
+            <span>已更新 · 09:44</span>
+          </div>
+          <div class="chat-bubble chat-user">问题在批次变更后出现，并且间歇性发生，没有手动设置更改记录。</div>
+        </article>
+        <article class="ui-card reveal-up">
+          <div class="text-xs uppercase tracking-[0.14em] text-text-muted mb-4">Structured Agent Result</div>
+          <div class="result-panel">
+            <section class="result-section">
+              <div class="result-label">
+                <strong>可能原因</strong>
+                <span>Possible Causes</span>
+              </div>
+              <ul class="bullet-list">
+                <li>批次相关材料差异</li>
+                <li>工艺状态波动</li>
+                <li>设备状态异常</li>
+              </ul>
+            </section>
+
+            <section class="result-section">
+              <div class="result-label">
+                <strong>建议检查</strong>
+                <span>Recommended Checks</span>
+              </div>
+              <ul class="bullet-list">
+                <li>确认当前批次 ID 与切换时间</li>
+                <li>查看近期检查记录和质检备注</li>
+                <li>与已有材料相关案例进行对比</li>
+              </ul>
+            </section>
+
+            <section class="result-section">
+              <div class="result-label">
+                <strong>知识来源</strong>
+                <span>Sources</span>
+              </div>
+              <div class="source-wrap">
+                <span class="source-chip">Knowledge A-12</span>
+                <span class="source-chip">Troubleshooting Guide R-03</span>
+                <span class="source-chip">Reviewed Case C-27</span>
+              </div>
+            </section>
+
+            <section class="result-section">
+              <div class="result-label">
+                <strong>风险等级</strong>
+                <span>Risk</span>
+              </div>
+              <div class="risk-row">
+                <span class="risk-badge">Medium Risk</span>
+              </div>
+              <p class="m-0 text-[14px] leading-7 text-text-secondary">当前证据不足以支持直接进行定量参数调整。</p>
+            </section>
+
+            <section class="result-section">
+              <div class="result-label">
+                <strong>人工升级</strong>
+                <span>Human Escalation</span>
+              </div>
+              <p class="m-0 mb-3 text-[14px] leading-7 text-text-secondary">如果现场检查仍无法确认原因，请升级至相关工程人员审核。</p>
+              <div class="review-state">建议人工复核</div>
+            </section>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="evaluation" class="section-anchor max-w-[1240px] mx-auto px-5 lg:px-8 py-10">
+      <div class="reveal-up mb-8">
+        <div class="eyebrow mb-5">评估与安全 Evaluation &amp; Safety</div>
+        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mb-4">我们评估的不是答案像不像，而是 Agent 行为是否可控</h2>
+        <p class="text-text-secondary text-base sm:text-lg max-w-3xl leading-8">
+          这个项目更关注 Agent 在真实流程中的行为质量：是否会追问、是否有来源、是否触发风险边界、是否知道何时升级人工，以及是否能够留下可复盘的处理记录。
+        </p>
+      </div>
+
+      <div class="eval-grid mb-6">
+        <article class="eval-card reveal-up">
+          <div class="eval-number">01</div>
+          <h3>信息完整性</h3>
+          <div class="eval-helper">Information Completeness</div>
+          <div class="eval-check">检查 Agent 是否识别问题描述中的关键信息缺口，并在必要时发起追问。</div>
+          <div class="outcome-row">
+            <span class="outcome-pill">Pass</span>
+            <span class="outcome-pill">Review</span>
+          </div>
+        </article>
+
+        <article class="eval-card reveal-up">
+          <div class="eval-number">02</div>
+          <h3>知识可追溯</h3>
+          <div class="eval-helper">Source Traceability</div>
+          <div class="eval-check">检查生成建议是否能指向明确知识来源，避免无来源的自由生成。</div>
+          <div class="outcome-row">
+            <span class="outcome-pill">Pass</span>
+            <span class="outcome-pill">Review</span>
+          </div>
+        </article>
+
+        <article class="eval-card reveal-up">
+          <div class="eval-number">03</div>
+          <h3>风险边界</h3>
+          <div class="eval-helper">Risk Boundary</div>
+          <div class="eval-check">检查是否避免未经审核的高风险动作、敏感定量参数或超出系统权限的建议。</div>
+          <div class="outcome-row">
+            <span class="outcome-pill">Pass</span>
+            <span class="outcome-pill escalate">Escalate</span>
+          </div>
+        </article>
+
+        <article class="eval-card reveal-up">
+          <div class="eval-number">04</div>
+          <h3>升级判断</h3>
+          <div class="eval-helper">Escalation Decision</div>
+          <div class="eval-check">检查当信息不足、知识覆盖不足或风险较高时，是否正确进入人工处理。</div>
+          <div class="outcome-row">
+            <span class="outcome-pill">Review</span>
+            <span class="outcome-pill escalate">Escalate</span>
+          </div>
+        </article>
+
+        <article class="eval-card reveal-up">
+          <div class="eval-number">05</div>
+          <h3>结果留痕</h3>
+          <div class="eval-helper">Outcome Traceability</div>
+          <div class="eval-check">检查是否保留问题描述、关键追问、引用来源、风险判断与处理结果，支持后续审查和知识迭代。</div>
+          <div class="outcome-row">
+            <span class="outcome-pill">Pass</span>
+            <span class="outcome-pill">Review</span>
+          </div>
+        </article>
+      </div>
+
+      <div class="section-card p-6 sm:p-7 reveal-up mb-6">
+        <div class="eyebrow mb-5">测试方法 Testing Method</div>
+        <div class="method-grid">
+          <div class="method-card">
+            <strong>Test Cases</strong>
+            <p>覆盖正常问题、信息不完整问题与边界场景。</p>
+          </div>
+          <div class="method-card">
+            <strong>Bad Cases</strong>
+            <p>记录错误假设、缺失说明与不安全输出。</p>
+          </div>
+          <div class="method-card">
+            <strong>Knowledge Review</strong>
+            <p>检查知识来源是否清晰、可追溯。</p>
+          </div>
+          <div class="method-card">
+            <strong>Risk Warning</strong>
+            <p>检查系统是否正确触发风险提示与边界限制。</p>
+          </div>
+          <div class="method-card">
+            <strong>Human Escalation</strong>
+            <p>检查人工升级条件是否在关键场景被正确触发。</p>
+          </div>
+          <div class="method-card">
+            <strong>Outcome Review</strong>
+            <p>检查处理过程和结果是否能被后续复盘利用。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card p-6 sm:p-7 reveal-up mb-6">
+        <div class="eyebrow mb-5">当前成果 Project Status</div>
+        <div class="status-grid">
+          <div class="status-card">
+            <strong>已完成可运行 Demo</strong>
+            <p>已串起问题输入、多轮澄清、结构化输出、风险提示与人工升级的展示闭环。</p>
+          </div>
+          <div class="status-card">
+            <strong>已完成测试题集与 Bad Case 迭代</strong>
+            <p>围绕信息缺失、来源不清与高风险输出等场景，持续补充测试样例与复盘记录。</p>
+          </div>
+          <div class="status-card">
+            <strong>已明确知识与规则边界</strong>
+            <p>当前页面展示的是脱敏后的产品逻辑，重点验证 Knowledge Retrieval、规则判断与升级策略的配合方式。</p>
+          </div>
+          <div class="status-card">
+            <strong>当前处于持续打磨阶段</strong>
+            <p>仍在围绕评估方式、边界场景和结果沉淀方式做迭代优化，而不是停留在概念说明。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-6">
+        <article id="reflection" class="section-card p-6 sm:p-7 reveal-up">
+          <div class="eyebrow mb-5">项目复盘 Reflection</div>
+          <p class="text-text-secondary text-base sm:text-lg leading-8 mt-0 mb-4">
+            企业 Agent 的价值，不只在于回答问题，而在于它能否真正进入业务流程：信息不足时会追问，建议有来源，高风险场景有明确边界，知识不足时能够升级人工。
+          </p>
+          <p class="text-text-secondary text-base sm:text-lg leading-8 m-0">
+            同样重要的是，处理过程和结果能够沉淀下来，支持后续复盘和知识迭代。对企业 Agent 来说，知道什么时候不应该直接回答，和回答本身同样重要。
+          </p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="py-10 border-t border-white/6">
+    <div class="max-w-[1240px] mx-auto px-5 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-text-muted">
+      <span>© 2026 Sudian Xu</span>
+      <div class="flex items-center gap-4">
+        <a href="index.html" class="text-text-muted no-underline hover:text-text-primary transition-colors">Back to Portfolio</a>
+        <a href="ideal-beat.html" class="text-text-muted no-underline hover:text-text-primary transition-colors">Ideal Beat</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const navbar = document.getElementById('navbar');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    function toggleMenu() {
+      mobileMenu.classList.toggle('open');
+      document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+    }
+    window.toggleMenu = toggleMenu;
+
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 24) {
+        navbar.classList.add('nav-shell');
+        navbar.classList.remove('nav-transparent');
+      } else {
+        navbar.classList.remove('nav-shell');
+        navbar.classList.add('nav-transparent');
+      }
+    }, { passive: true });
+
+    if (!reduceMotion) {
+      const lenis = new Lenis({
+        duration: 1.1,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true
+      });
+
+      function raf(time) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
+      }
+      requestAnimationFrame(raf);
+
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener('click', function(event) {
+          const targetId = this.getAttribute('href');
+          if (!targetId || targetId === '#') return;
+          const targetEl = document.querySelector(targetId);
+          if (!targetEl) return;
+          event.preventDefault();
+          mobileMenu.classList.remove('open');
+          document.body.style.overflow = '';
+          lenis.scrollTo(targetEl, { offset: -72, duration: 1.05 });
+        });
+      });
+
+      gsap.registerPlugin(ScrollTrigger);
+      lenis.on('scroll', ScrollTrigger.update);
+      gsap.ticker.add((time) => lenis.raf(time * 1000));
+      gsap.ticker.lagSmoothing(0);
+
+      gsap.utils.toArray('.reveal-up').forEach((el, index) => {
+        const baseConfig = {
+          y: 18,
+          duration: 0.45,
+          ease: 'power1.out',
+          clearProps: 'transform,opacity'
+        };
+        if (index < 2) {
+          gsap.from(el, { ...baseConfig, opacity: 0, delay: 0.08 * index });
+          return;
+        }
+        gsap.from(el, {
+          ...baseConfig,
+          opacity: 0.16,
+          immediateRender: false,
+          scrollTrigger: { trigger: el, start: 'top 90%', toggleActions: 'play none none none' }
+        });
+      });
+    } else {
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener('click', function() {
+          mobileMenu.classList.remove('open');
+          document.body.style.overflow = '';
+        });
+      });
+    }
+  </script>
+</body>
+</html>
